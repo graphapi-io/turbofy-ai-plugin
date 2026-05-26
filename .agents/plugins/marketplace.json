@@ -1,0 +1,20 @@
+{
+  "name": "turbofy",
+  "interface": {
+    "displayName": "Turbofy"
+  },
+  "plugins": [
+    {
+      "name": "turbofy",
+      "source": {
+        "source": "local",
+        "path": "./plugins/turbofy"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Developer Tools"
+    }
+  ]
+}

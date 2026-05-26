@@ -1,6 +1,6 @@
 # Turbofy Plugin
 
-A plugin for Claude Code and Cursor that wires up the Turbofy MCP server and ships four skills covering the Turbofy app-development workflow.
+A plugin for Codex, Claude Code, and Cursor that wires up the Turbofy MCP server and ships four skills covering the Turbofy app-development workflow.
 
 ## What's in the box
 
@@ -13,7 +13,21 @@ A plugin for Claude Code and Cursor that wires up the Turbofy MCP server and shi
 
 ## Installing
 
-This repo is both the **plugin** and its **marketplace** (single-repo setup for both Claude Code and Cursor).
+This repo is both the **plugin** and its **marketplace** (single-repo setup for Codex, Claude Code, and Cursor).
+
+### Codex
+
+Codex reads the marketplace catalog at [`.agents/plugins/marketplace.json`](.agents/plugins/marketplace.json). That catalog points to the Codex plugin under [`plugins/turbofy/`](plugins/turbofy/), whose manifest lives at [`plugins/turbofy/.codex-plugin/plugin.json`](plugins/turbofy/.codex-plugin/plugin.json). Installing the plugin gives Codex both the Turbofy skills and the `turbofy` MCP server.
+
+Use the Codex plugin UI to add this repository as a marketplace:
+
+| Field | Value |
+| --- | --- |
+| Source | `git@github.com:graphapi-io/turbofy-ai-plugin.git` or `https://github.com/graphapi-io/turbofy-ai-plugin.git` |
+| Git ref | `main` |
+| Sparse paths | Leave empty |
+
+For local development, point Codex at this repo as a local marketplace source, then restart or reload plugins so the skills and MCP server are picked up.
 
 ### Claude Code
 
@@ -63,6 +77,9 @@ claude plugin validate /path/to/turbofy-plugin
 
 ```
 turbofy-plugin/
+├── .agents/
+│   └── plugins/
+│       └── marketplace.json        # Codex marketplace catalog
 ├── .claude-plugin/
 │   ├── plugin.json                 # Claude Code plugin manifest
 │   └── marketplace.json            # Claude Code marketplace catalog
@@ -71,6 +88,12 @@ turbofy-plugin/
 │   └── marketplace.json            # Cursor marketplace catalog
 ├── .mcp.json                       # Claude Code MCP server config
 ├── mcp.json                        # Cursor MCP server config (same content)
+├── plugins/
+│   └── turbofy/                    # Codex plugin root
+│       ├── .codex-plugin/
+│       │   └── plugin.json         # Codex plugin manifest
+│       ├── .mcp.json               # Codex MCP server config
+│       └── skills/                 # Codex skill copies
 ├── skills/                         # SKILL.md files (cross-tool)
 │   ├── turbofy-platform/SKILL.md
 │   ├── turbofy-apps/SKILL.md
