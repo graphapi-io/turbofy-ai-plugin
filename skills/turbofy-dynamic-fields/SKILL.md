@@ -1,11 +1,11 @@
 ---
 name: turbofy-dynamic-fields
-description: Use when writing or editing Turbofy dynamic-field code — JavaScript strings executed server-side in a QuickJS VM. Triggers include writing defaultConfig or defaultDynamicData on an appBuilder.blockType, per-instance config or dynamicData on an appBuilder.block, the localizedConfig of a page, or any other field declared as @dynamic_field. Covers the runtime model ($$self, $$args, $$std globals; how return values and errors are resolved), the $$std API ($$std.getRecord, $$std.listRecords, $$std.listRecordsByParent, $$std.batchGetRecords, $$std.batchGetRecordsByInputs, $$std.translate, $$std.batchTranslate, $$std.getImage, $$std.batchLink, $$std.get, $$std.getDynamicArg, $$std.getCurrentRecord), reserved dynamicArgs keys (fields, fieldsCode, skipDynamicResolver, lang, cmsOfTypes, slug, params, searchParams), serializable-shape rules, and the snapshot gotcha for cross-field reads. Use whenever you are authoring or debugging a dynamic field.
+description: Use when writing or editing Turbofy dynamic-field code — JavaScript strings executed server-side in a Secure VM. Triggers include writing defaultConfig or defaultDynamicData on an appBuilder.blockType, per-instance config or dynamicData on an appBuilder.block, the localizedConfig of a page, or any other field declared as @dynamic_field. Covers the runtime model ($$self, $$args, $$std globals; how return values and errors are resolved), the $$std API ($$std.getRecord, $$std.listRecords, $$std.listRecordsByParent, $$std.batchGetRecords, $$std.batchGetRecordsByInputs, $$std.translate, $$std.batchTranslate, $$std.getImage, $$std.batchLink, $$std.get, $$std.getDynamicArg, $$std.getCurrentRecord), reserved dynamicArgs keys (fields, fieldsCode, skipDynamicResolver, lang, cmsOfTypes, slug, params, searchParams), serializable-shape rules, and the snapshot gotcha for cross-field reads. Use whenever you are authoring or debugging a dynamic field.
 ---
 
 # Turbofy Dynamic Fields
 
-Dynamic fields are string fields whose contents are executed as JavaScript in a server-side QuickJS VM. They are how a Turbofy app computes derived values, fetches related records, resolves localized copies, and resolves page links — all without a deployed backend. This skill covers the runtime model, the `$$std` API, and common patterns.
+Dynamic fields are string fields whose contents are executed as JavaScript in a server-side Secure VM. They are how a Turbofy app computes derived values, fetches related records, resolves localized copies, and resolves page links — all without a deployed backend. This skill covers the runtime model, the `$$std` API, and common patterns.
 
 The companion skills `turbofy-apps` (app workflow + data model) and `turbofy-blocks` (writing block React components) cover those areas.
 
@@ -269,5 +269,6 @@ const featured = allProducts.filter((p) => p.featured === true);
 
 ## See also
 
+- **`turbofy-platform`** — platform orientation, workspaces & environments, the full MCP tool surface and core rules, the schema workflow, and the data-builder DSL (useful when a dynamic field references a workspace table by `SomeTable.id`).
 - **`turbofy-apps`** — Apps CMS data model (where dynamic fields appear on `Page.localizedConfig`, `BuildingBlockType.defaultConfig`/`defaultDynamicData`, `BuildingBlock.config`/`dynamicData`), the `Turbofy_app_*` workflow, the auto-injected `copies` mechanism.
 - **`turbofy-blocks`** — when and how to push state into `dynamicData` versus client-side `@/api` hooks; how `config.copies` is consumed in the React component; `$$std.batchLink` usage examples.

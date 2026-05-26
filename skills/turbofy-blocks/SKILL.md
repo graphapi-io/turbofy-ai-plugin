@@ -1003,5 +1003,6 @@ export const BuildingBlock = ({
 
 ## See also
 
-- **`turbofy-apps`** — Apps CMS data model, `Turbofy_app_*` workflow, file layout, localization workflow, schema DSL, macros.
+- **`turbofy-platform`** — platform orientation, workspaces & environments, MCP tool surface, core rules, schema workflow, data-builder DSL.
+- **`turbofy-apps`** — Apps CMS data model, `Turbofy_app_*` workflow, file layout, localization workflow, macros.
 - **`turbofy-dynamic-fields`** — full `$$std` API reference, runtime model, reserved `dynamicArgs` keys, debugging checklist for dynamic-field code.

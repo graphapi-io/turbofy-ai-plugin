@@ -1,17 +1,24 @@
 ---
 name: turbofy-apps
-description: Use when building or modifying Turbofy apps via the Turbofy MCP — creating an app, pulling it locally, editing app.ts (pages, block-instance placement, app settings, i18n), pushing changes, migrating legacy @cms_* tables, or understanding the Apps CMS data model (App, Page, BuildingBlock, BuildingBlockType, Localization, Image, SlugMapping). Loads the MCP tool list, the unified workspace file layout (~/.turbofy/workspaces/<env>/<wsId>/apps/<appId>/), and the pull → edit → push workflow. Use whenever you are calling Turbofy_app_* or Turbofy_workspace_* tools, or you need to reason about how the pieces of an app fit together.
+description: Use when building or modifying Turbofy apps via the Turbofy MCP — creating an app, pulling it locally, editing app.ts (pages, block-instance placement, app settings, i18n), pushing changes, or understanding the Apps CMS data model (App, Page, BuildingBlock, BuildingBlockType, Localization, Image, SlugMapping). Loads the Apps CMS tool list, the unified app file layout (~/.turbofy/workspaces/<env>/<wsId>/apps/<appId>/), the pull → edit → push app workflow, the localization round-trip, block-instance editing, and the macros used in app.ts. Use whenever you are calling Turbofy_app_* tools or you need to reason about how the pieces of an app fit together. For workspace/schema-level work (Turbofy_workspace_*, schema.ts, the data-builder DSL, org/workspace discovery) and core MCP rules, load `turbofy-platform` instead.
 ---
 
 # Turbofy Apps
 
-Your main goal is to create and develop apps inside the Turbofy platform. The companion skills `turbofy-blocks` (writing block React components) and `turbofy-dynamic-fields` (server-side dynamic-field JavaScript) cover those areas in detail.
+This skill covers building and modifying Turbofy apps — the Apps CMS data model, the `Turbofy_app_*` workflow, the app file layout, localization, and block-instance editing.
+
+For platform-level concerns (workspaces, environments, org/workspace discovery, the data schema, the `Turbofy_workspace_*` workflow, the data-builder DSL, and core MCP rules like "pass `workspaceId` explicitly" and "system CMS vs workspace IDs"), see `turbofy-platform`. The companion skills `turbofy-blocks` (writing block React components) and `turbofy-dynamic-fields` (server-side dynamic-field JavaScript) cover those areas in detail.
 
 ---
 
 ## 1) What are Apps?
 
-Apps are a powerful feature of Turbofy that enables users to dynamically create and run web applications directly within the Turbofy dashboard — no publishing or deployment required. These apps have direct access to users' data, making them seamlessly integrated with the platform.
+Apps are how Turbofy lets users assemble web applications from a data schema and a set of building blocks. They can run in two modes:
+
+- **In-dashboard** — the default. Apps execute inside the Turbofy dashboard with direct access to the workspace's data (including non-public tables, gated by the dashboard's auth). No publishing or deployment step.
+- **Published / standalone** — the same app served as a production-ready public site. **Currently limited to public apps**: a published app can only read from and write to **public tables**. If the app touches any non-public table, publishing is not an option until that data is moved to a public table (or the app is restructured). Keep this constraint in mind when designing the schema for an app that's intended to be published.
+
+The runtime, file layout, and `Turbofy_app_*` workflow are identical for both modes — the difference is the table-visibility constraint that publishing imposes.
 
 ### Data model
 
@@ -21,19 +28,9 @@ Tables are referenced **by name** in Turbofy MCP (e.g. `Page`, `Localization`).
 
 The **source of truth for the Apps CMS app definition** is the decompiled workspace files (`app.ts` and `block-types/` under the app directory after `Turbofy_app_pull`). The MCP writes them to `~/.turbofy/workspaces/<environment>/<workspaceId>/apps/<appId>/`. Use them to understand pages, blocks, block types, and macros.
 
-Important: the core Apps CMS tables are **system types** and are **not part of the workspace schema**:
+Important: the core Apps CMS tables (`App`, `Page`, `BuildingBlockType`, `BuildingBlock`, `Localization`, `Image`) are **system types** and are **not part of the workspace schema**. Their IDs are stable — do not look them up via `Turbofy_table_list`. Reference them via `CmsOfTypeEnum.X` inside the DSL (`schema.ts`, `app.ts`, `record.ts`) or via the literal string value (`"cmspage"`, `"cmsbuildingblock"`, …) when calling MCP tools directly. See `turbofy-platform` § "Core MCP rules" for the full mapping table and the legacy `@cms_*` migration note.
 
-- System CMS tables: `App`, `Page`, `BuildingBlockType`, `BuildingBlock`, `Localization`, `Image`
-- Their IDs are stable and come from `CmsOfTypeEnum.*` (not workspace-specific)
-- `Turbofy_table_list` reflects the workspace schema only, so it may not show system CMS tables
-
-If a workspace schema contains legacy `@cms_*` directive tables, app tooling will refuse to operate until the workspace is migrated to system CMS types. Contact the workspace owner to migrate before continuing.
-
-In dynamic-field code, tables are often referenced **by table id** (e.g. `$$std.getRecord(<tableId>, ...)`). For workspace schema tables, IDs are workspace-specific; resolve them via:
-
-- `Turbofy_table_list` (table names + ids + fields)
-
-Exception: for the **system CMS tables**, use the stable IDs from `CmsOfTypeEnum` (do not look them up via `Turbofy_table_list`).
+In dynamic-field code, tables are often referenced **by table id** (e.g. `$$std.getRecord(<tableId>, ...)`). For workspace schema tables, resolve IDs via `Turbofy_table_list` or read them from `schema.ts`. For system CMS tables, interpolate `CmsOfTypeEnum.X` into the dynamic-field template literal (the runtime sees the resolved string).
 
 #### App
 
@@ -121,7 +118,7 @@ Note: `appId` is not included in the pattern since localizations already belong 
 
 `{lang}_blocktype_{blockTypeId}` records are managed by the workspace — never edit them directly. They are produced by `Turbofy_app_push` from each block type's `record.ts` `localizations` field, and surfaced back into `record.ts` by `Turbofy_app_pull`.
 
-**Legacy IDs**: older workspaces may contain Localization rows with ad-hoc IDs (`en_product`, `de_footer`, `en_navigation`, `en_table`, `de_search`, `en_manufacturer_2vaEf74y...`). They predate the canonical scheme. Inspect with `Turbofy_data_list` on the Localization table (`ofType: CmsOfTypeEnum.Localization`) and migrate to one of the patterns above when touching them.
+**Legacy IDs**: older workspaces may contain Localization rows with ad-hoc IDs (`en_product`, `de_footer`, `en_navigation`, `en_table`, `de_search`, `en_manufacturer_2vaEf74y...`). They predate the canonical scheme. Inspect with `Turbofy_data_list` on the Localization table (`ofType: "cmslocalization"`) and migrate to one of the patterns above when touching them.
 
 #### SlugMapping
 
@@ -155,71 +152,37 @@ Key fields:
 
 ## 2) MCP tools
 
-Use the `turbofy` MCP for production work and the `turbofy-alpha` MCP for the alpha stage. Both expose the same set of tools, prefixed `Turbofy_*`.
+The full Turbofy MCP tool surface and the core MCP rules (`workspaceId` is explicit, read-before-write, system-CMS-vs-workspace IDs, pagination limits) live in `turbofy-platform` § 3–4. This section covers only the **app-specific** tools and the system CMS `ofType` map.
 
-### Core rules
-
-**Pass the workspace ID explicitly.** The new MCP does not track an "active workspace" — every tool that needs a workspace accepts a `workspaceId` argument. Discover IDs with `Turbofy_list_workspaces`. Within a pulled app directory the workspace is implicit from the directory path.
-
-**Read before write.** Before updating or deleting a record, fetch it (`Turbofy_data_get`) to confirm IDs and current state. Before creating related records, list the parent/collection (`Turbofy_data_list` with the right `ofType`) to avoid duplicates.
-
-**Verify after write.** After create/update/delete, fetch/list again to confirm the intended state. Before `Turbofy_app_push`, call it with `dryRun: true` first to preview the diff.
-
-**Treat IDs correctly.** Workspace-schema table IDs are workspace-specific — resolve via `Turbofy_table_list`. System CMS table IDs are stable — use `CmsOfTypeEnum.App | Page | BuildingBlockType | BuildingBlock | Localization | FileDocument`.
-
-**Know common limits.** `Turbofy_data_list` is capped (commonly 100 per request). Paginate with the returned `nextToken`.
-
-### Complete tool list
-
-**Workspaces & orgs:**
-
-- `Turbofy_list_organizations`
-- `Turbofy_list_workspaces`
-- `Turbofy_workspace_pull` — pull workspace schema into `~/.turbofy/workspaces/<env>/<workspaceId>/` (writes `schema.ts` + `schema.base.json`)
-- `Turbofy_workspace_push` — typecheck, compile, validate, and push the local `schema.ts`
-
-**Apps (unified workspace):**
+### App-specific tools
 
 - `Turbofy_app_init` — create app + default Home page remotely AND scaffold the local workspace in one step
 - `Turbofy_app_pull` — pull app into `~/.turbofy/workspaces/<env>/<workspaceId>/apps/<appId>/`
 - `Turbofy_app_push` — compile schema + blocks, upload, reconcile from the unified workspace (supports `dryRun: true`)
 
-**Tables:**
+Always call `Turbofy_app_push` with `dryRun: true` first to preview the diff.
 
-- `Turbofy_table_list` — list workspace tables with field names/types
+### Reading Apps CMS entities via `Turbofy_data_*`
 
-**Data (generic CRUD across all tables, including system CMS tables):**
+When you need pages/block types/building blocks/localizations/images, use the generic data tools (`Turbofy_data_list`, `Turbofy_data_get`, etc. — see `turbofy-platform`). For the `ofType` argument, pass the **literal string value** below — `CmsOfTypeEnum.X` only works inside the DSL (TypeScript), not in MCP tool calls.
 
-- `Turbofy_data_list` — list records (`ofType`, optional `nextToken`, `limit`, etc.)
-- `Turbofy_data_get` — fetch a single record
-- `Turbofy_data_create` — create a record
-- `Turbofy_data_add_many` — bulk create
-- `Turbofy_data_update` — update a record
-- `Turbofy_data_delete` — delete a record
+| Entity              | `ofType` (MCP)             |
+| ------------------- | -------------------------- |
+| App                 | `"cmsapp"`                 |
+| Page                | `"cmspage"`                |
+| BuildingBlockType   | `"cmsbuildingblocktype"`   |
+| BuildingBlock       | `"cmsbuildingblock"`       |
+| Localization        | `"cmslocalization"`        |
+| Image (FileDocument)| `"filedocument"`           |
+| SlugMapping         | `"slugmapping"`            |
 
-**Files:**
-
-- `Turbofy_file_upload` — upload a file and create a FileDocument record
-
-**Reading specific entity types via `Turbofy_data_*`:**
-
-When you need pages/block types/building blocks/localizations/images, use `Turbofy_data_list` and `Turbofy_data_get` with the appropriate system CMS type ID:
-
-| Entity              | `ofType`                          |
-| ------------------- | --------------------------------- |
-| App                 | `CmsOfTypeEnum.App`               |
-| Page                | `CmsOfTypeEnum.Page`              |
-| BuildingBlockType   | `CmsOfTypeEnum.BuildingBlockType` |
-| BuildingBlock       | `CmsOfTypeEnum.BuildingBlock`     |
-| Localization        | `CmsOfTypeEnum.Localization`      |
-| Image (FileDocument)| `CmsOfTypeEnum.FileDocument`      |
-| SlugMapping         | `CmsOfTypeEnum.SlugMapping`       |
+See `turbofy-platform` § 4 for the full mapping table (including the DSL enum equivalents and the less common entries `EntityLocalization`, `Api`, `Code`).
 
 Apps, pages, block types, and block instances are normally managed via the workspace files + `Turbofy_app_push` — the generic data tools are for one-off reads/edits and for things the workspace doesn't own (e.g. arbitrary Localization rows, SlugMapping entries, FileDocument records).
 
 ---
 
-## 3) App & schema workflow
+## 3) App workflow
 
 ### Primary workflow: `Turbofy_app_init` → `Turbofy_app_pull` / edit / `Turbofy_app_push`
 
@@ -430,102 +393,18 @@ const home = appBuilder.page({
 
 Push materializes each non-empty dictionary into a `${lang}_block_${blockId}` Localization row. Validation in `buildApp` enforces the same locale subset rule as block types: every key under `localizations` must be in `i18n.locales`.
 
-To remove an override, delete the `localizations` field (or the specific locale entry) and run `Turbofy_app_push`. The reconciler does not delete dropped Localization rows automatically — use `Turbofy_data_delete` on the Localization row (`ofType: CmsOfTypeEnum.Localization`) if you need the CMS row gone, otherwise the empty/stale row is harmless.
+To remove an override, delete the `localizations` field (or the specific locale entry) and run `Turbofy_app_push`. The reconciler does not delete dropped Localization rows automatically — use `Turbofy_data_delete` on the Localization row (`ofType: "cmslocalization"`) if you need the CMS row gone, otherwise the empty/stale row is harmless.
 
 #### When to use which localization mechanism
 
 - **Block type copies** — strings owned by a block type's React component (button labels, headings, error messages). Live in `record.ts` `localizations`. The builder auto-injects them into `config.copies` at runtime regardless of what you put in `defaultConfig`. **This is where almost all UI strings belong.**
-- **Per-block instance overrides** — when one specific block instance on one specific page needs different copies than the block type default. Set `localizations` on the corresponding `appBuilder.block(...)` call in `app.ts` (writes `${lang}_block_${blockId}` rows on push). Or, for ad-hoc one-off edits, use `Turbofy_data_create` / `Turbofy_data_update` on `CmsOfTypeEnum.Localization`.
-- **Page-level localized content** (`{lang}_page_{pageId}`) — page metadata (title, description) consumed by `pageLocalizedConfigCode()`. Manage via `Turbofy_data_*` on `CmsOfTypeEnum.Localization`.
+- **Per-block instance overrides** — when one specific block instance on one specific page needs different copies than the block type default. Set `localizations` on the corresponding `appBuilder.block(...)` call in `app.ts` (writes `${lang}_block_${blockId}` rows on push). Or, for ad-hoc one-off edits, use `Turbofy_data_create` / `Turbofy_data_update` with `ofType: "cmslocalization"`.
+- **Page-level localized content** (`{lang}_page_{pageId}`) — page metadata (title, description) consumed by `pageLocalizedConfigCode()`. Manage via `Turbofy_data_*` with `ofType: "cmslocalization"`.
 - **Schema/data localizations** (e.g. translated entity descriptions) — store on the entity itself (the original "manufacturer description in `de`" use case). Use ad-hoc dictionaries the entity's dynamic fields can read via `$$std.translate(...)`.
 
-### Schema workflow: pull → edit → push
+### Schema changes inside an app
 
-1. **Pull** — call `Turbofy_workspace_pull` to write the current schema to `~/.turbofy/workspaces/<environment>/<workspaceId>/` as `schema.ts` + `schema.base.json`.
-2. **Edit** — modify `schema.ts` using the builder DSL (see below). Do not touch `schema.base.json` — it is the diff baseline used by push.
-3. **Push** — call `Turbofy_workspace_push` to typecheck, compile, validate, and push.
-
-If the push fails, fix the reported errors in `schema.ts` and call push again.
-
-### Builder DSL reference
-
-The schema file imports and uses the builder:
-
-```ts
-import { dataBuilder as builder } from "@graphapi-io/dsl-builders";
-```
-
-#### Enums
-
-```ts
-const StatusEnum = builder.enumType("Status", ["Active", "Inactive"]);
-```
-
-#### Tables
-
-```ts
-const ProjectTable = builder.table(
-  "Project",
-  {
-    name: builder.fields.string(),
-    description: builder.fields.string(),
-    status: builder.fields.enum(StatusEnum),
-  },
-  {
-    directives: ["@required_oncreate", "@sortby"],
-    publishingTypes: ["Queries", "Mutations"],
-  },
-);
-```
-
-#### Fields
-
-Scalar: `string()`, `integer()`, `float()`, `boolean()`, `id()`, `email()`, `phone()`, `url()`, `date()`, `dateTime()`, `time()`, `timestamp()`, `json()`, `ipAddress()`
-
-List: `listString()`, `listInteger()`, `listFloat()`, `listBoolean()`, `listId()`
-
-Special: `enum(enumDeclaration)`, `dynamicField()`
-
-All field methods accept optional opts:
-
-```ts
-builder.fields.string({ label: "Full Name", directives: ["@auth"] });
-```
-
-#### Parent-child relationships
-
-```ts
-const TaskTable = builder.table(
-  "Task",
-  {
-    title: builder.fields.string(),
-  },
-  {
-    firstParent: ProjectTable,
-  },
-);
-```
-
-Up to two parents are supported via `firstParent` and `secondParent`.
-
-#### Build call
-
-Every schema file must end with `builder.build()`:
-
-```ts
-export const schema = builder.build({
-  enums: [StatusEnum],
-  types: [ProjectTable, TaskTable],
-  products: [],
-});
-```
-
-### Critical schema rules
-
-- **Do NOT provide IDs for new types, fields, or enums.** The builder auto-generates 6-character unique IDs. Existing types in the decompiled file already have `{ id: "..." }` — keep those as-is. Only omit IDs for things you are adding.
-- **Declare parents before children.** Tables used as `firstParent` or `secondParent` must appear earlier in the file.
-- **Default fields are automatic.** Every table automatically gets `id` (with `@connector`), `createdAt`, and `updatedAt`. Do not add these manually.
-- **Include all types in the build call.** Every table and enum variable must appear in the `builder.build()` arrays, otherwise it will be silently dropped.
+When app work requires schema changes (new tables, fields, enums), edit `schema.ts` at the workspace root — `Turbofy_app_push` reconciles schema changes as a side-effect of the app push, so you don't need a separate `Turbofy_workspace_push`. For pure schema work outside an app context, use the `Turbofy_workspace_pull` → edit → `Turbofy_workspace_push` loop directly. The schema DSL itself (builder calls, field types, parents, critical rules) is documented in `turbofy-platform` § 5–6.
 
 ### Macros
 
@@ -586,8 +465,8 @@ Most localization edits happen in the workspace, not via MCP data tools:
 
 Use the generic data tools below for ad-hoc edits or things the workspace doesn't own:
 
-- `Turbofy_data_list` with `ofType: CmsOfTypeEnum.Localization` — list localizations (filter the returned items client-side by id prefix, e.g. starting with `en_page_<pageId>`)
-- `Turbofy_data_get` with `ofType: CmsOfTypeEnum.Localization` — fetch a localization record
+- `Turbofy_data_list` with `ofType: "cmslocalization"` — list localizations (filter the returned items client-side by id prefix, e.g. starting with `en_page_<pageId>`)
+- `Turbofy_data_get` with `ofType: "cmslocalization"` — fetch a localization record
 - `Turbofy_data_create` / `Turbofy_data_update` — create or update a localization record
 
 These are the right tools for **page-level content** (`{lang}_page_{pageId}`) and one-off per-block instance edits when you don't want to round-trip through the workspace. Avoid using them to write `{lang}_blocktype_{blockTypeId}` rows directly — those are owned by the workspace and the next `Turbofy_app_pull` will reflect whatever is in `record.ts`. The same applies to `{lang}_block_{blockId}` rows when the block has `localizations` declared on the `block(...)` call in `app.ts`: pull will surface them and push will overwrite anything you wrote outside the workspace.
@@ -598,15 +477,16 @@ When a block is created via `Turbofy_app_push`, an empty `en_block_<blockId>` Lo
 
 Use the generic data tools to read CMS entities:
 
-- Pages: `Turbofy_data_list` / `Turbofy_data_get` with `ofType: CmsOfTypeEnum.Page`
-- Block types: `Turbofy_data_list` / `Turbofy_data_get` with `ofType: CmsOfTypeEnum.BuildingBlockType`
-- Block instances: `Turbofy_data_list` / `Turbofy_data_get` with `ofType: CmsOfTypeEnum.BuildingBlock`
+- Pages: `Turbofy_data_list` / `Turbofy_data_get` with `ofType: "cmspage"`
+- Block types: `Turbofy_data_list` / `Turbofy_data_get` with `ofType: "cmsbuildingblocktype"`
+- Block instances: `Turbofy_data_list` / `Turbofy_data_get` with `ofType: "cmsbuildingblock"`
 
-For block instances on a specific page, list with `ofType: CmsOfTypeEnum.BuildingBlock` and filter client-side by `pageId`.
+For block instances on a specific page, list with `ofType: "cmsbuildingblock"` and filter client-side by `pageId`.
 
 ---
 
 ## See also
 
+- **`turbofy-platform`** — platform orientation, workspaces & environments, org/workspace discovery, the full MCP tool surface + core rules, the workspace schema workflow (`Turbofy_workspace_*`), and the data-builder DSL.
 - **`turbofy-blocks`** — writing block-type runtime React components (`block-types/<Name>/index.tsx`): props, copies, UI/UX rules, client-side hooks.
 - **`turbofy-dynamic-fields`** — server-side dynamic-field code (`defaultConfig`, `defaultDynamicData`, page `localizedConfig`): the `$$std` API, `$$args`, `$$self`, reserved `dynamicArgs` keys.

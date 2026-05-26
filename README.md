@@ -1,12 +1,13 @@
 # Turbofy Plugin
 
-A plugin for Claude Code and Cursor that wires up the Turbofy MCP server and ships three skills covering the Turbofy app-development workflow.
+A plugin for Claude Code and Cursor that wires up the Turbofy MCP server and ships four skills covering the Turbofy app-development workflow.
 
 ## What's in the box
 
 - **MCP server** (`turbofy`) — runs `npx -y @turbofy-ai/mcp@latest`, so the latest published MCP is fetched on demand.
-- **Three skills** auto-trigger based on what you're working on:
-  - **`turbofy-apps`** — Apps CMS data model + `Turbofy_app_*` / `Turbofy_workspace_*` workflow (pull → edit → push, file layout under `~/.turbofy/workspaces/<env>/<wsId>/apps/<appId>/`, block-instance editing).
+- **Four skills** auto-trigger based on what you're working on:
+  - **`turbofy-platform`** — orientation skill and entry point: the platform mental model (org → workspace → schema → apps → pages → blocks → dynamic fields), workspaces & environments (`alpha` / `prod`), the `~/.turbofy/workspaces/<env>/<wsId>/` root, the full MCP tool surface + core rules, the `Turbofy_workspace_*` schema workflow, and the data-builder DSL.
+  - **`turbofy-apps`** — Apps CMS data model + `Turbofy_app_*` workflow (pull → edit → push, file layout under `apps/<appId>/`, localization round-trip, block-instance editing, macros).
   - **`turbofy-blocks`** — writing block-type React components (`block-types/<Name>/index.tsx`): `IBuildingBlockProps`, `config.copies`, client-side hooks from `@/api`, navigation with `@/navigation`, UI/UX/accessibility rules.
   - **`turbofy-dynamic-fields`** — server-side dynamic-field JavaScript (`defaultConfig`, `defaultDynamicData`, etc.): `$$self`, `$$args`, the `$$std` API, reserved `dynamicArgs` keys.
 
@@ -71,6 +72,7 @@ turbofy-plugin/
 ├── .mcp.json                       # Claude Code MCP server config
 ├── mcp.json                        # Cursor MCP server config (same content)
 ├── skills/                         # SKILL.md files (cross-tool)
+│   ├── turbofy-platform/SKILL.md
 │   ├── turbofy-apps/SKILL.md
 │   ├── turbofy-blocks/SKILL.md
 │   └── turbofy-dynamic-fields/SKILL.md
