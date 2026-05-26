@@ -13,7 +13,7 @@ A plugin for Codex, Claude Code, and Cursor that wires up the Turbofy MCP server
 
 ## Installing
 
-This repo is both the **plugin** and its **marketplace** (single-repo setup for Codex, Claude Code, and Cursor).
+This repo is both the **plugin** and its **marketplace** for Codex, Claude Code, and Cursor.
 
 ### Codex
 
@@ -42,12 +42,52 @@ Then `/reload-plugins` (or restart the session). The `turbofy` MCP connects auto
 
 Cursor reads the catalog at [`.cursor-plugin/marketplace.json`](.cursor-plugin/marketplace.json) and the plugin manifest at [`.cursor-plugin/plugin.json`](.cursor-plugin/plugin.json). Add the marketplace via Cursor's plugin UI (or however the current Cursor build prefers), and Cursor will pick up the `turbofy` plugin + its MCP server and skills.
 
+### OpenCode
+
+OpenCode does not currently have an equivalent marketplace/plugin bundle format for installing both MCP servers and skills from this repo. Add both pieces manually:
+
+1. Add the MCP server to OpenCode config.
+
+   For a single project, edit `opencode.json` in that project's root. For all projects, edit `~/.config/opencode/opencode.json`.
+
+   ```jsonc
+   {
+     "$schema": "https://opencode.ai/config.json",
+     "mcp": {
+       "turbofy": {
+         "type": "local",
+         "command": ["npx", "-y", "@turbofy-ai/mcp@latest"],
+         "enabled": true
+       }
+     }
+   }
+   ```
+
+2. Install the skills.
+
+   Copy each folder from [`skills/`](skills/) into one of OpenCode's skill discovery locations:
+
+   - Project-local: `.opencode/skills/<skill-name>/SKILL.md`
+   - Global: `~/.config/opencode/skills/<skill-name>/SKILL.md`
+   - Agent-compatible project path: `.agents/skills/<skill-name>/SKILL.md`
+   - Agent-compatible global path: `~/.agents/skills/<skill-name>/SKILL.md`
+
+   For example:
+
+   ```bash
+   mkdir -p .opencode/skills
+   cp -R /path/to/turbofy-ai-plugin/skills/* .opencode/skills/
+   ```
+
+OpenCode loads skills on demand through its native `skill` tool, so after copying them, restart OpenCode or start a new session and the `turbofy-*` skills should appear as available skills.
+
 ### Manual MCP setup (no plugin install)
 
 If you'd rather just wire up the MCP without using the plugin system, copy the content of [`mcp.json`](mcp.json) into your client's MCP config:
 
 - Claude Code: `~/.claude.json` or project `.mcp.json`
 - Cursor: `~/.cursor/mcp.json` or project `.cursor/mcp.json`
+- OpenCode: project `opencode.json` or global `~/.config/opencode/opencode.json`, under the `mcp` key
 
 ## Local development
 
