@@ -62,4 +62,4 @@ The MCP currently always runs against the `prod` environment. To run against `al
 
 ## Skill content
 
-The three SKILL.md files currently contain only frontmatter and a TODO marker. The full content lives in `.opencode/agents/apps-manager.md` in the `my.graphapi.io` monorepo and will be ported here next.
+The three skills are ported from the `apps-manager` OpenCode agent that previously lived at `.opencode/agents/apps-manager.md` in the `my.graphapi.io` monorepo. Tool references have been updated to match the current `@turbofy-ai/mcp` tool surface (e.g. `Turbofy_data_*` on `CmsOfTypeEnum.*` replaces the per-entity tools the old MCP exposed).
