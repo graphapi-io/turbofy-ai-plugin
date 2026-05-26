@@ -1,0 +1,27 @@
+{
+  "name": "turbofy",
+  "displayName": "Turbofy",
+  "version": "0.0.1",
+  "description": "Turbofy MCP integration plus guidance skills for building apps, block types, and dynamic fields on the Turbofy platform.",
+  "author": {
+    "name": "Turbofy",
+    "email": "tomasz@tmorawski.com"
+  },
+  "license": "MIT",
+  "keywords": [
+    "turbofy",
+    "mcp",
+    "apps",
+    "cms",
+    "blocks"
+  ],
+  "category": "developer-tools",
+  "tags": [
+    "mcp",
+    "apps",
+    "blocks",
+    "skills"
+  ],
+  "skills": "./skills/",
+  "mcpServers": "./mcp.json"
+}
