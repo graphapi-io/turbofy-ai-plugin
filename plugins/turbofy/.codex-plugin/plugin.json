@@ -31,6 +31,8 @@
       "Create a Turbofy block type.",
       "Write a Turbofy dynamic field."
     ],
-    "brandColor": "#14B8A6"
+    "brandColor": "#14B8A6",
+    "composerIcon": "./assets/turbofy_symbol_black_RGB.png",
+    "logo": "./assets/turbofy_logo_black_RGB.png"
   }
 }
