@@ -1,159 +1,127 @@
 # Turbofy Plugin
 
-A plugin for Codex, Claude Code, and Cursor that wires up the Turbofy MCP server and ships four skills covering the Turbofy app-development workflow.
+This plugin connects your AI coding assistant — **Claude Code**, **Codex**, **Cursor**, or **OpenCode** — to Turbofy. Once installed, your assistant can help you build Turbofy apps, edit pages and blocks, and work with your data, all from inside the editor.
 
-## What's in the box
+---
 
-- **MCP server** (`turbofy`) — runs `npx -y @turbofy-ai/mcp@latest`, so the latest published MCP is fetched on demand.
-- **Four skills** auto-trigger based on what you're working on:
-  - **`turbofy-platform`** — orientation skill and entry point: the platform mental model (org → workspace → schema → apps → pages → blocks → dynamic fields), workspaces & environments (`alpha` / `prod`), the `~/.turbofy/workspaces/<env>/<wsId>/` root, the full MCP tool surface + core rules, the `Turbofy_workspace_*` schema workflow, and the data-builder DSL.
-  - **`turbofy-apps`** — Apps CMS data model + `Turbofy_app_*` workflow (pull → edit → push, file layout under `apps/<appId>/`, localization round-trip, block-instance editing, macros).
-  - **`turbofy-blocks`** — writing block-type React components (`block-types/<Name>/index.tsx`): `IBuildingBlockProps`, `config.copies`, client-side hooks from `@/api`, navigation with `@/navigation`, UI/UX/accessibility rules.
-  - **`turbofy-dynamic-fields`** — server-side dynamic-field JavaScript (`defaultConfig`, `defaultDynamicData`, etc.): `$$self`, `$$args`, the `$$std` API, reserved `dynamicArgs` keys.
+## How to install
 
-## Installing
+For **Claude Code**, **Codex**, and **Cursor**, the installation is the same two-step process:
 
-This repo is both the **plugin** and its **marketplace** for Codex, Claude Code, and Cursor.
+1. Add this GitHub repository as a **plugin marketplace**.
+2. Pick the **Turbofy** plugin from that marketplace and install it.
+
+The repository URL is the same in all three apps:
+
+```
+https://github.com/graphapi-io/turbofy-ai-plugin
+```
+
+Pick your app below for the exact clicks.
+
+### Claude (desktop app)
+
+1. Open the **Claude** desktop app.
+2. Go to **Claude Code**.
+3. Click **Customize**.
+4. Click the **+** icon next to **Personal Plugins**.
+5. Choose **Create Plugin** → **Add marketplace**.
+6. Paste `https://github.com/graphapi-io/turbofy-ai-plugin` and confirm.
+7. Select the **Turbofy** plugin and click **Install**.
+
+That's it — from now on you can just use it.
 
 ### Codex
 
-Codex reads the marketplace catalog at [`.agents/plugins/marketplace.json`](.agents/plugins/marketplace.json). That catalog points to the Codex plugin under [`plugins/turbofy/`](plugins/turbofy/), whose manifest lives at [`plugins/turbofy/.codex-plugin/plugin.json`](plugins/turbofy/.codex-plugin/plugin.json). Installing the plugin gives Codex both the Turbofy skills and the `turbofy` MCP server.
+1. Open Codex.
+2. Open the **Plugins** panel.
+3. Next to the search input, click **Built by OpenAI**.
+4. Click **Add more** — this opens the **Add marketplace** dialog.
+5. Paste `https://github.com/graphapi-io/turbofy-ai-plugin` as the source.
+6. Click **Save**.
+7. Click **Built by OpenAI** next to the plugin search input again.
+8. Select **Turbofy**.
+9. Click the **+** button next to the Turbofy plugin in the search results.
+10. Click **Install Turbofy**.
+11. In a chat window, click the **+** button → **Plugins** → **Turbofy**, or simply type `@Turbofy` to use the plugin.
+12. The first time you use it, a browser window opens to authenticate with your Turbofy credentials.
+13. Sign in — from then on you can work on your apps directly from Codex.
 
-Use the Codex plugin UI to add this repository as a marketplace:
+### Cursor (Agent window mode)
 
-| Field | Value |
-| --- | --- |
-| Source | `git@github.com:graphapi-io/turbofy-ai-plugin.git` or `https://github.com/graphapi-io/turbofy-ai-plugin.git` |
-| Git ref | `main` |
-| Sparse paths | Leave empty |
-
-For local development, point Codex at this repo as a local marketplace source, then restart or reload plugins so the skills and MCP server are picked up.
-
-### Claude Code
-
-```bash
-/plugin marketplace add <your-org>/turbofy-plugin
-/plugin install turbofy@turbofy
-```
-
-Then `/reload-plugins` (or restart the session). The `turbofy` MCP connects automatically and the three skills are available for auto-trigger or manual invocation (`/turbofy:turbofy-apps`, etc.).
-
-### Cursor
-
-Cursor reads the catalog at [`.cursor-plugin/marketplace.json`](.cursor-plugin/marketplace.json) and the plugin manifest at [`.cursor-plugin/plugin.json`](.cursor-plugin/plugin.json). Add the marketplace via Cursor's plugin UI (or however the current Cursor build prefers), and Cursor will pick up the `turbofy` plugin + its MCP server and skills.
+1. Open Cursor and switch to the **Agent window** mode.
+2. Go to **Settings** → **Plugins**.
+3. Paste `https://github.com/graphapi-io/turbofy-ai-plugin` into the **Search or Paste Link** input.
+4. Select **Turbofy** from the results to install it.
 
 ### OpenCode
 
-OpenCode does not currently have an equivalent marketplace/plugin bundle format for installing both MCP servers and skills from this repo. Add both pieces manually:
+OpenCode doesn't yet support installing this kind of plugin in one click, so you need to add the two pieces by hand.
 
-1. Add the MCP server to OpenCode config.
+**1. Add the Turbofy connection (MCP server)**
 
-   For a single project, edit `opencode.json` in that project's root. For all projects, edit `~/.config/opencode/opencode.json`.
+Open the OpenCode config file:
 
-   ```jsonc
-   {
-     "$schema": "https://opencode.ai/config.json",
-     "mcp": {
-       "turbofy": {
-         "type": "local",
-         "command": ["npx", "-y", "@turbofy-ai/mcp@latest"],
-         "enabled": true
-       }
-     }
-   }
-   ```
+- For a single project: `opencode.json` in that project's root.
+- For all your projects: `~/.config/opencode/opencode.json`.
 
-2. Install the skills.
+Add (or merge) this block:
 
-   Copy each folder from [`skills/`](skills/) into one of OpenCode's skill discovery locations:
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "turbofy": {
+      "type": "local",
+      "command": ["npx", "-y", "@turbofy-ai/mcp@latest"],
+      "enabled": true
+    }
+  }
+}
+```
 
-   - Project-local: `.opencode/skills/<skill-name>/SKILL.md`
-   - Global: `~/.config/opencode/skills/<skill-name>/SKILL.md`
-   - Agent-compatible project path: `.agents/skills/<skill-name>/SKILL.md`
-   - Agent-compatible global path: `~/.agents/skills/<skill-name>/SKILL.md`
+**2. Add the Turbofy skills**
 
-   For example:
+Copy the folders from this repo's [`skills/`](skills/) into one of these locations:
 
-   ```bash
-   mkdir -p .opencode/skills
-   cp -R /path/to/turbofy-ai-plugin/skills/* .opencode/skills/
-   ```
+- Project-only: `.opencode/skills/`
+- All projects: `~/.config/opencode/skills/`
 
-OpenCode loads skills on demand through its native `skill` tool, so after copying them, restart OpenCode or start a new session and the `turbofy-*` skills should appear as available skills.
-
-### Manual MCP setup (no plugin install)
-
-If you'd rather just wire up the MCP without using the plugin system, copy the content of [`mcp.json`](mcp.json) into your client's MCP config:
-
-- Claude Code: `~/.claude.json` or project `.mcp.json`
-- Cursor: `~/.cursor/mcp.json` or project `.cursor/mcp.json`
-- OpenCode: project `opencode.json` or global `~/.config/opencode/opencode.json`, under the `mcp` key
-
-## Local development
-
-To iterate without publishing:
+For example:
 
 ```bash
-# Claude Code
-claude --plugin-dir /path/to/turbofy-plugin
+mkdir -p .opencode/skills
+cp -R /path/to/turbofy-ai-plugin/skills/* .opencode/skills/
 ```
 
-Inside the session:
+Restart OpenCode and the `turbofy-*` skills will show up as available skills.
 
-```text
-/mcp                       # confirm the turbofy MCP is connected
-/turbofy:turbofy-apps      # manually invoke a skill
-```
+---
 
-After editing files here, run `/reload-plugins` to pick up changes.
+## What you get after installing
 
-To validate the manifests:
+- A direct connection from your assistant to your Turbofy workspace (the **Turbofy MCP server**), so it can list your organizations and workspaces, pull and push apps, edit your schema, and manage data.
+- Four built-in **skills** that teach your assistant how Turbofy works. They turn on automatically when relevant:
+  - **turbofy-platform** — the big picture: organizations, workspaces, environments, and the data schema.
+  - **turbofy-apps** — building and editing Turbofy apps: pages, blocks, localization.
+  - **turbofy-blocks** — writing the React components that power block types.
+  - **turbofy-dynamic-fields** — writing the small server-side scripts that fill in dynamic content.
 
-```bash
-claude plugin validate /path/to/turbofy-plugin
-```
+You don't need to remember these names — your assistant picks the right one as you work.
 
-## Layout
+---
 
-```
-turbofy-plugin/
-├── .agents/
-│   └── plugins/
-│       └── marketplace.json        # Codex marketplace catalog
-├── .claude-plugin/
-│   ├── plugin.json                 # Claude Code plugin manifest
-│   └── marketplace.json            # Claude Code marketplace catalog
-├── .cursor-plugin/
-│   ├── plugin.json                 # Cursor plugin manifest
-│   └── marketplace.json            # Cursor marketplace catalog
-├── .mcp.json                       # Claude Code MCP server config
-├── mcp.json                        # Cursor MCP server config (same content)
-├── plugins/
-│   └── turbofy/                    # Codex plugin root
-│       ├── .codex-plugin/
-│       │   └── plugin.json         # Codex plugin manifest
-│       ├── .mcp.json               # Codex MCP server config
-│       └── skills/                 # Codex skill copies
-├── skills/                         # SKILL.md files (cross-tool)
-│   ├── turbofy-platform/SKILL.md
-│   ├── turbofy-apps/SKILL.md
-│   ├── turbofy-blocks/SKILL.md
-│   └── turbofy-dynamic-fields/SKILL.md
-└── README.md
-```
+## Troubleshooting
 
-The skills are the only meaningful shared content; the rest is small bookkeeping per ecosystem. Keep `mcp.json` and `.mcp.json` in sync if you change either one.
+- **Nothing happened after install.** Restart the app or reload plugins. In Claude Code you can also run `/reload-plugins`.
+- **The assistant doesn't seem to see Turbofy.** Make sure you're signed in to Turbofy in your assistant, and that the `turbofy` MCP appears as connected (in Claude Code, run `/mcp`).
+- **I want a clean reinstall.** Remove the plugin from the plugin menu, then add the marketplace again and reinstall.
 
-## MCP source
+---
 
-The MCP server is published from the [`my.graphapi.io`](https://github.com/) monorepo at `packages/mcp/` as the npm package `@turbofy-ai/mcp`. The plugin pins to `@latest`, so users always get the most recent release; bump the MCP's `package.json` version + publish to push updates without touching the plugin.
+## Notes for developers
 
-### Alpha environment (not yet supported)
-
-The MCP currently always runs against the `prod` environment. To run against `alpha`, the MCP needs a small change to honor an env var (e.g. `TURBOFY_ENV=alpha`) in `bin/mcp-server.ts`. Once that lands, the MCP configs can register a second `turbofy-alpha` server alongside `turbofy`.
-
-## Skill content
-
-The three skills are ported from the `apps-manager` OpenCode agent that previously lived at `.opencode/agents/apps-manager.md` in the `my.graphapi.io` monorepo. Tool references have been updated to match the current `@turbofy-ai/mcp` tool surface (e.g. `Turbofy_data_*` on `CmsOfTypeEnum.*` replaces the per-entity tools the old MCP exposed).
-
-SKILL.md frontmatter uses only `name` and `description` (the universal subset of the format). Both Claude Code and Cursor consume the same files unchanged.
+- The MCP server is published as the npm package [`@turbofy-ai/mcp`](https://www.npmjs.com/package/@turbofy-ai/mcp). The plugin always pulls `@latest`, so you don't need to update the plugin when the MCP is updated.
+- This repo is both the **plugin** and its **marketplace**. The manifests live under `.claude-plugin/`, `.cursor-plugin/`, `.agents/plugins/`, and `plugins/turbofy/.codex-plugin/`.
+- The skills under `skills/` are shared across all four apps unchanged.
+- The MCP currently runs against the `prod` Turbofy environment only. Alpha support is planned.
