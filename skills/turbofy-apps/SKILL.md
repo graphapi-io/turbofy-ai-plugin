@@ -485,6 +485,73 @@ For block instances on a specific page, list with `ofType: "cmsbuildingblock"` a
 
 ---
 
+## 5) Building or modifying a multi-block app (orchestration)
+
+Creating an app from scratch and modifying an existing one are the **same
+workflow** with two switches: `Turbofy_app_init` vs `Turbofy_app_pull` at the
+front, and a full build vs a delta in the middle. Once the schema and a per-block
+contract are fixed, blocks are largely independent of each other, so the block
+work **parallelizes** — but the pieces *within* one block (dynamic field →
+`record.ts` → `index.tsx`) are a dependency chain that must stay together in one
+worker.
+
+**Scale to the work.** For one or two blocks, just do it inline. Fan out only
+when there are several independent blocks to build/modify — parallelism buys
+wall-clock at the cost of N× context.
+
+### Roles & file ownership
+
+Parallel workers must write **disjoint** files. The shared files have exactly one
+owner: the **orchestrator** (the main agent driving this skill).
+
+| Owner | Writes | Never writes |
+| ----- | ------ | ------------ |
+| Orchestrator (main agent) | `app.ts`, `schema.ts`, the `block-types/index.ts` barrel; runs init/pull and the single push | individual `block-types/<Name>/` internals |
+| `turbofy-block-builder` (one per block) | only its own `block-types/<Name>/` (`record.ts`, `index.tsx`) | `app.ts`, the barrel, `schema.ts`, other blocks; never pushes |
+| `turbofy-schema-builder` (optional) | `schema.ts` | `app.ts`, `block-types/` |
+
+> The fan-out happens **at the orchestrator (main-agent) level** — a subagent
+> can't spawn further subagents. If custom plugin agents aren't available in your
+> environment, brief a general subagent per block with the same lane rules and
+> the `turbofy-blocks` + `turbofy-dynamic-fields` skills loaded.
+
+### The unified flow
+
+1. **Enter** — `Turbofy_app_init` (from scratch) or `Turbofy_app_pull`
+   (existing). Confirm the app directory exists on disk.
+2. **Schema** — define/modify `schema.ts` (inline, or delegate to
+   `turbofy-schema-builder`). You usually do **not** push schema here — the final
+   `Turbofy_app_push` reconciles it. Push early only if a builder needs live
+   data. Capture the resulting **data contract** (table names, IDs, fields).
+3. **Define block contracts** — before fanning out, spec each block slot: Name,
+   `config` knobs + copy keys + locales, the `dynamicData` shape and which schema
+   tables/fields it reads, sourceless-or-React, and target page/position. This is
+   the sequential, high-leverage step that stops parallel builders from drifting.
+   For a **delta**, label each block add / modify / delete.
+4. **Build blocks in parallel** — delegate one `turbofy-block-builder` per
+   **added or modified** block, each with its contract. **Deletes are not
+   workers** — remove the `block-types/<Name>/` dir and unwire it yourself.
+   Collect each builder's returned barrel line, import name, instance config,
+   assumed schema deltas, and copy keys.
+5. **Assemble** (orchestrator, sequential — the fan-in) — reconcile any schema
+   deltas the builders surfaced; update the `block-types/index.ts` barrel; wire
+   imports, `appBuilder.block(...)` placement, positions, and pages into
+   `app.ts`. Keep `i18n.locales` a superset of every locale the builders used.
+6. **Push once** — `Turbofy_app_push` with `dryRun: true`, fix any cross-block
+   errors (re-delegating to the relevant builder if a single block is at fault),
+   then the real push. This is a **hard barrier** — never run parallel or
+   per-block pushes; the reconciler operates on the whole app from disk.
+
+### Why one block can't be split, but many blocks can
+
+Within a block, the React component depends on the block-type DSL, which often
+depends on the dynamic-field code — so that vertical slice lives in **one**
+`turbofy-block-builder` and runs in order. Across blocks there's no such
+dependency once the schema + contracts are fixed, which is exactly the axis you
+parallelize on.
+
+---
+
 ## See also
 
 - **`turbofy-platform`** — platform orientation, workspaces & environments, org/workspace discovery, the full MCP tool surface + core rules, the workspace schema workflow (`Turbofy_workspace_*`), and the data-builder DSL.

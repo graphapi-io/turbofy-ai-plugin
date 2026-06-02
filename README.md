@@ -145,12 +145,3 @@ need to do that each session, whereas `/turbofy-setup` is permanent.
 - **Claude keeps asking permission to touch `~/.turbofy`.** Run `/turbofy-setup` once (see [Fewer permission prompts](#fewer-permission-prompts-claude)).
 - **I want a clean reinstall.** Remove the plugin from the plugin menu, then add the marketplace again and reinstall.
 
----
-
-## Notes for developers
-
-- The MCP server is published as the npm package [`@turbofy-ai/mcp`](https://www.npmjs.com/package/@turbofy-ai/mcp). The plugin always pulls `@latest`, so you don't need to update the plugin when the MCP is updated.
-- This repo is both the **plugin** and its **marketplace**. The manifests live under `.claude-plugin/`, `.cursor-plugin/`, `.agents/plugins/`, and `plugins/turbofy/.codex-plugin/`.
-- The four `turbofy-*` skills under `skills/` are shared across all four apps unchanged, and are duplicated into `plugins/turbofy/skills/` (the Codex package); keep the two copies in sync when editing.
-- The `/turbofy-setup` skill (`skills/turbofy-setup/`) is a one-time permission helper that edits `~/.claude/settings.json`, so it is **Claude Code only**. It deliberately lives in the root `skills/` only and is **not** duplicated into the Codex `plugins/turbofy/` package. It is a normal skill (just `name` + `description`, like the `turbofy-*` skills) so it surfaces in the desktop `/` menu; its body asks for confirmation before editing settings if Claude reaches it on its own. (Note: the Claude desktop app does **not** surface plugin slash *commands* from a `commands/` dir — and it silently drops skills that carry the `disable-model-invocation` frontmatter key — which is why this is a plain skill.)
-- The MCP currently runs against the `prod` Turbofy environment only. Alpha support is planned.
