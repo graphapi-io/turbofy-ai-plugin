@@ -28,6 +28,7 @@ Pick your app below for the exact clicks.
 5. Choose **Create Plugin** → **Add marketplace**.
 6. Paste `https://github.com/graphapi-io/turbofy-ai-plugin` and confirm.
 7. Select the **Turbofy** plugin and click **Install**.
+8. In a chat, run **`/turbofy-setup`** once (see [Fewer permission prompts](#fewer-permission-prompts-claude) below). This stops Claude from asking for permission every time it works on your Turbofy files.
 
 That's it — from now on you can just use it.
 
@@ -111,10 +112,37 @@ You don't need to remember these names — your assistant picks the right one as
 
 ---
 
+## Fewer permission prompts (Claude)
+
+Turbofy keeps your pulled workspaces and apps under `~/.turbofy/`. Because that
+folder lives outside your current project, Claude asks for permission every time
+it reads or edits a file there — which gets noisy fast.
+
+To fix it once, type `/` in a Claude chat and run the **`/turbofy-setup`** skill:
+
+```
+/turbofy-setup
+```
+
+It adds a small block to your `~/.claude/settings.json` that trusts the
+`~/.turbofy` folder, so Claude can work on your Turbofy files without asking each
+time. It's safe to run more than once — it won't duplicate anything. After it
+finishes, run `/reload-plugins` or restart the app.
+
+If you'd rather not run it, you can get the same effect by switching the session
+to **Auto accept edits** mode from the selector in the message box — but you'd
+need to do that each session, whereas `/turbofy-setup` is permanent.
+
+> This step is **Claude Code only** — it configures Claude's settings file.
+> Cursor, Codex, and OpenCode manage permissions their own way.
+
+---
+
 ## Troubleshooting
 
 - **Nothing happened after install.** Restart the app or reload plugins. In Claude Code you can also run `/reload-plugins`.
 - **The assistant doesn't seem to see Turbofy.** Make sure you're signed in to Turbofy in your assistant, and that the `turbofy` MCP appears as connected (in Claude Code, run `/mcp`).
+- **Claude keeps asking permission to touch `~/.turbofy`.** Run `/turbofy-setup` once (see [Fewer permission prompts](#fewer-permission-prompts-claude)).
 - **I want a clean reinstall.** Remove the plugin from the plugin menu, then add the marketplace again and reinstall.
 
 ---
@@ -123,5 +151,6 @@ You don't need to remember these names — your assistant picks the right one as
 
 - The MCP server is published as the npm package [`@turbofy-ai/mcp`](https://www.npmjs.com/package/@turbofy-ai/mcp). The plugin always pulls `@latest`, so you don't need to update the plugin when the MCP is updated.
 - This repo is both the **plugin** and its **marketplace**. The manifests live under `.claude-plugin/`, `.cursor-plugin/`, `.agents/plugins/`, and `plugins/turbofy/.codex-plugin/`.
-- The skills under `skills/` are shared across all four apps unchanged.
+- The four `turbofy-*` skills under `skills/` are shared across all four apps unchanged, and are duplicated into `plugins/turbofy/skills/` (the Codex package); keep the two copies in sync when editing.
+- The `/turbofy-setup` skill (`skills/turbofy-setup/`) is a one-time permission helper that edits `~/.claude/settings.json`, so it is **Claude Code only**. It deliberately lives in the root `skills/` only and is **not** duplicated into the Codex `plugins/turbofy/` package. It is a normal skill (just `name` + `description`, like the `turbofy-*` skills) so it surfaces in the desktop `/` menu; its body asks for confirmation before editing settings if Claude reaches it on its own. (Note: the Claude desktop app does **not** surface plugin slash *commands* from a `commands/` dir — and it silently drops skills that carry the `disable-model-invocation` frontmatter key — which is why this is a plain skill.)
 - The MCP currently runs against the `prod` Turbofy environment only. Alpha support is planned.
