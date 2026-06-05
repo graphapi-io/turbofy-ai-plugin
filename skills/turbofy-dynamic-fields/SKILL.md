@@ -1,6 +1,7 @@
 ---
 name: turbofy-dynamic-fields
-description: Use when writing or editing Turbofy dynamic-field code — JavaScript strings executed server-side in a Secure VM. Triggers include writing defaultConfig or defaultDynamicData on an appBuilder.blockType, per-instance config or dynamicData on an appBuilder.block, the localizedConfig of a page, or any other field declared as @dynamic_field. Covers the runtime model ($$self, $$args, $$std globals; how return values and errors are resolved), the $$std API ($$std.getRecord, $$std.listRecords, $$std.listRecordsByParent, $$std.batchGetRecords, $$std.batchGetRecordsByInputs, $$std.translate, $$std.batchTranslate, $$std.getImage, $$std.batchLink, $$std.get, $$std.getDynamicArg, $$std.getCurrentRecord), reserved dynamicArgs keys (fields, fieldsCode, skipDynamicResolver, lang, cmsOfTypes, slug, params, searchParams), serializable-shape rules, and the snapshot gotcha for cross-field reads. Use whenever you are authoring or debugging a dynamic field.
+description: "Use when server-side data logic in a Turbofy app is wrong or needs to be written — pre-fetching records, resolving page-specific titles from the URL, wiring translations, resolving links between pages, or debugging why a section shows null/empty data. Triggers: 'load data for this section', 'fetch products server-side', 'show the right title for this URL', 'why is this block empty', 'resolve links between pages', 'get translations for this content', or when editing @dynamic_field / $$std code. Covers the Secure VM runtime, $$self/$$args/$$std, and common data-fetch patterns. For the React UI that displays the data, load turbofy-blocks. For page/section placement, load turbofy-apps."
+disable-model-invocation: false
 ---
 
 # Turbofy Dynamic Fields
@@ -8,6 +9,10 @@ description: Use when writing or editing Turbofy dynamic-field code — JavaScri
 Dynamic fields are string fields whose contents are executed as JavaScript in a server-side Secure VM. They are how a Turbofy app computes derived values, fetches related records, resolves localized copies, and resolves page links — all without a deployed backend. This skill covers the runtime model, the `$$std` API, and common patterns.
 
 The companion skills `turbofy-apps` (app workflow + data model) and `turbofy-blocks` (writing block React components) cover those areas.
+
+## When to load this skill
+
+Load when **server-side data is wrong or missing** — e.g. "why is this section empty?", "load featured products on the homepage", "show the article title from the URL". Users rarely say "dynamic field"; they describe the symptom or outcome.
 
 ---
 

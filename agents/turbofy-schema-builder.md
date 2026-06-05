@@ -1,6 +1,6 @@
 ---
 name: turbofy-schema-builder
-description: Owns the Turbofy workspace data-schema editing loop — pull (if needed), edit schema.ts with the data-builder DSL, dry-run validate, and report the resulting table/field contract. Delegate when a task needs schema changes (new tables, fields, enums, parents) so the main thread stays focused and gets back a clean data contract to hand to block builders. Does not build blocks, edit app.ts, or place block instances.
+description: Delegate when a task needs database/schema changes — new tables, fields, enums, or parent relationships — so the main thread gets back a clean data contract for UI work. Owns schema.ts edit → validate → (optional) push. Does not build UI sections or edit page layout.
 skills: [turbofy-platform, turbofy-apps]
 ---
 

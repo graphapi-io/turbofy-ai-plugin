@@ -1,6 +1,7 @@
 ---
 name: turbofy-apps
-description: Use when building or modifying Turbofy apps via the Turbofy MCP — creating an app, pulling it locally, editing app.ts (pages, block-instance placement, app settings, i18n), pushing changes, or understanding the Apps CMS data model (App, Page, BuildingBlock, BuildingBlockType, Localization, Image, SlugMapping). Loads the Apps CMS tool list, the unified app file layout (~/.turbofy/workspaces/<env>/<wsId>/apps/<appId>/), the pull → edit → push app workflow, the localization round-trip, block-instance editing, and the macros used in app.ts. Use whenever you are calling Turbofy_app_* tools or you need to reason about how the pieces of an app fit together. For workspace/schema-level work (Turbofy_workspace_*, schema.ts, the data-builder DSL, org/workspace discovery) and core MCP rules, load `turbofy-platform` instead.
+description: "Use when building or editing a Turbofy website/app — creating an app, syncing it locally, adding/removing/reordering pages, placing or rearranging sections on a page, changing site settings, translating content, fixing URLs/slugs, or pushing changes live. Triggers: 'build my app', 'add a page', 'update the homepage', 'change the layout', 'add a header to every page', 'translate to German', 'fix this URL', 'reorder sections', 'edit my Turbofy app' — even when the user doesn't mention files or tools. Load BEFORE calling any Turbofy_app_* MCP tool. Covers app.ts, pages, section placement, localization, and pull → edit → push. Do NOT use for database schema changes or writing React UI code — load turbofy-platform or turbofy-blocks instead."
+disable-model-invocation: false
 ---
 
 # Turbofy Apps
@@ -8,6 +9,10 @@ description: Use when building or modifying Turbofy apps via the Turbofy MCP —
 This skill covers building and modifying Turbofy apps — the Apps CMS data model, the `Turbofy_app_*` workflow, the app file layout, localization, and block-instance editing.
 
 For platform-level concerns (workspaces, environments, org/workspace discovery, the data schema, the `Turbofy_workspace_*` workflow, the data-builder DSL, and core MCP rules like "pass `workspaceId` explicitly" and "system CMS vs workspace IDs"), see `turbofy-platform`. The companion skills `turbofy-blocks` (writing block React components) and `turbofy-dynamic-fields` (server-side dynamic-field JavaScript) cover those areas in detail.
+
+## When to load this skill
+
+Load when the user wants to **change their site structure or content placement** — e.g. "add a contact page", "put the hero above the footer", "translate the site to French". Do not wait for them to mention `app.ts`, MCP tools, or block-instance IDs.
 
 ---
 

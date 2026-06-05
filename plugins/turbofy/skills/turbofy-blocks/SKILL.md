@@ -1,11 +1,16 @@
 ---
 name: turbofy-blocks
-description: Use when writing or editing a Turbofy block type's runtime React component — typically a file at block-types/<Name>/index.tsx inside a pulled Turbofy app. Covers the IBuildingBlockProps interface (config, dynamicData, locale, params, searchParams, slug, pageId), the auto-injected config.copies dictionary, locale/copy/navigation rules (no window.location, no t() wrappers, no hardcoded strings), client-side data fetching with @/api hooks (useTypeQuery, useListTypes, useListTypesByParent, useSearchTypes, useLinks, useTranslations, useFileDocuments, useUploadFile, useWsSubscription), the @/navigation Link/navigate helpers, UI/UX/accessibility/dark-mode design rules (typography, spacing, grid, color, motion, empty/loading states), and per-block-instance localization overrides. Use whenever you open or modify a block index.tsx file, or you need to decide between server-side dynamicData and client-side hooks.
+description: "Use when building or styling a UI section/component in a Turbofy app — navigation bars, hero banners, product grids, search boxes, forms, footers, cards, lists, filters, or any interactive page section. Triggers: 'build a navigation bar', 'create a product listing', 'style the hero', 'add a search box', 'make this section responsive', 'add dark mode', 'show loading/empty states', 'fetch data in this component', or when editing block-types/*/index.tsx. Covers React block components, translations/copies, navigation, data hooks, and UI/accessibility rules. For placing an existing section on a page, load turbofy-apps. For server-side data that feeds the section, load turbofy-dynamic-fields."
+disable-model-invocation: false
 ---
 
 # Turbofy Blocks
 
 This skill covers the runtime React component of a Turbofy block type — the `block-types/<Name>/index.tsx` file inside a pulled app directory (`~/.turbofy/workspaces/<env>/<workspaceId>/apps/<appId>/`). The companion skills `turbofy-apps` (app workflow + data model) and `turbofy-dynamic-fields` (server-side `defaultConfig` / `defaultDynamicData` code) cover those areas.
+
+## When to load this skill
+
+Load when the user wants to **build or restyle a page section** — e.g. "create a product grid", "add a sticky navbar", "make the form look better". Do not wait for them to mention `index.tsx` or block-type names.
 
 ---
 

@@ -1,6 +1,7 @@
 ---
 name: turbofy-apps
-description: Use when building or modifying Turbofy apps via the Turbofy MCP — creating an app, pulling it locally, editing app.ts (pages, block-instance placement, app settings, i18n), pushing changes, or understanding the Apps CMS data model (App, Page, BuildingBlock, BuildingBlockType, Localization, Image, SlugMapping). Loads the Apps CMS tool list, the unified app file layout (~/.turbofy/workspaces/<env>/<wsId>/apps/<appId>/), the pull → edit → push app workflow, the localization round-trip, block-instance editing, and the macros used in app.ts. Use whenever you are calling Turbofy_app_* tools or you need to reason about how the pieces of an app fit together. For workspace/schema-level work (Turbofy_workspace_*, schema.ts, the data-builder DSL, org/workspace discovery) and core MCP rules, load `turbofy-platform` instead.
+description: "Use when building or editing a Turbofy website/app — creating an app, syncing it locally, adding/removing/reordering pages, placing or rearranging sections on a page, changing site settings, translating content, fixing URLs/slugs, or pushing changes live. Triggers: 'build my app', 'add a page', 'update the homepage', 'change the layout', 'add a header to every page', 'translate to German', 'fix this URL', 'reorder sections', 'edit my Turbofy app' — even when the user doesn't mention files or tools. Load BEFORE calling any Turbofy_app_* MCP tool. Covers app.ts, pages, section placement, localization, and pull → edit → push. Do NOT use for database schema changes or writing React UI code — load turbofy-platform or turbofy-blocks instead."
+disable-model-invocation: false
 ---
 
 # Turbofy Apps
@@ -8,6 +9,10 @@ description: Use when building or modifying Turbofy apps via the Turbofy MCP —
 This skill covers building and modifying Turbofy apps — the Apps CMS data model, the `Turbofy_app_*` workflow, the app file layout, localization, and block-instance editing.
 
 For platform-level concerns (workspaces, environments, org/workspace discovery, the data schema, the `Turbofy_workspace_*` workflow, the data-builder DSL, and core MCP rules like "pass `workspaceId` explicitly" and "system CMS vs workspace IDs"), see `turbofy-platform`. The companion skills `turbofy-blocks` (writing block React components) and `turbofy-dynamic-fields` (server-side dynamic-field JavaScript) cover those areas in detail.
+
+## When to load this skill
+
+Load when the user wants to **change their site structure or content placement** — e.g. "add a contact page", "put the hero above the footer", "translate the site to French". Do not wait for them to mention `app.ts`, MCP tools, or block-instance IDs.
 
 ---
 
@@ -108,11 +113,11 @@ Key fields:
 
 **Naming patterns** (canonical):
 
-| Pattern                          | Example IDs             | Purpose                                                                      |
-| -------------------------------- | ----------------------- | ---------------------------------------------------------------------------- |
+| Pattern                          | Example IDs             | Purpose                                                                             |
+| -------------------------------- | ----------------------- | ----------------------------------------------------------------------------------- |
 | `{lang}_blocktype_{blockTypeId}` | `en_blocktype_2vaEf74y` | Block type copies — written by `Turbofy_app_push` from `record.ts` `localizations`. |
-| `{lang}_block_{blockId}`         | `en_block_ghi789`       | Per-instance block overrides.                                                |
-| `{lang}_page_{pageId}`           | `en_page_def456`        | Page-level localized content.                                                |
+| `{lang}_block_{blockId}`         | `en_block_ghi789`       | Per-instance block overrides.                                                       |
+| `{lang}_page_{pageId}`           | `en_page_def456`        | Page-level localized content.                                                       |
 
 Note: `appId` is not included in the pattern since localizations already belong to an app via the `appId` field.
 
@@ -166,15 +171,15 @@ Always call `Turbofy_app_push` with `dryRun: true` first to preview the diff.
 
 When you need pages/block types/building blocks/localizations/images, use the generic data tools (`Turbofy_data_list`, `Turbofy_data_get`, etc. — see `turbofy-platform`). For the `ofType` argument, pass the **literal string value** below — `CmsOfTypeEnum.X` only works inside the DSL (TypeScript), not in MCP tool calls.
 
-| Entity              | `ofType` (MCP)             |
-| ------------------- | -------------------------- |
-| App                 | `"cmsapp"`                 |
-| Page                | `"cmspage"`                |
-| BuildingBlockType   | `"cmsbuildingblocktype"`   |
-| BuildingBlock       | `"cmsbuildingblock"`       |
-| Localization        | `"cmslocalization"`        |
-| Image (FileDocument)| `"filedocument"`           |
-| SlugMapping         | `"slugmapping"`            |
+| Entity               | `ofType` (MCP)           |
+| -------------------- | ------------------------ |
+| App                  | `"cmsapp"`               |
+| Page                 | `"cmspage"`              |
+| BuildingBlockType    | `"cmsbuildingblocktype"` |
+| BuildingBlock        | `"cmsbuildingblock"`     |
+| Localization         | `"cmslocalization"`      |
+| Image (FileDocument) | `"filedocument"`         |
+| SlugMapping          | `"slugmapping"`          |
 
 See `turbofy-platform` § 4 for the full mapping table (including the DSL enum equivalents and the less common entries `EntityLocalization`, `Api`, `Code`).
 
@@ -296,7 +301,7 @@ export const app = appBuilder.buildApp({
   name: "My App",
   i18n: {
     locales: ["en", "de"], // every locale the app supports
-    default: "en",         // root-locale redirect target AND copies-fallback locale
+    default: "en", // root-locale redirect target AND copies-fallback locale
   },
   pages: [home, productDetail],
   blockTypes: [navigationBlock, dashboardBlock, footerBlock],
@@ -421,13 +426,13 @@ const {
 } = macros;
 ```
 
-| Macro                                     | Used in                     | Description                                                                                                                                                                                                                          |
-| ----------------------------------------- | --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Macro                                     | Used in                     | Description                                                                                                                                                                                                                                                                                                                                                                               |
+| ----------------------------------------- | --------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `blockTypeCopiesCode()`                   | _internal_                  | Resolves localized copies for the block type from `${lang}_blocktype_${$$self.id}` Localization records. Used as the schema default for `BuildingBlockType.defaultConfig` (when no user code is provided). **Do not spread it into `defaultConfig` yourself** — the dsl-builders auto-inject `copies` into every user-supplied `defaultConfig` (hard lock; see "Auto-injected `copies`"). |
-| `blockConfigCode(BlockTypeTable.id)`      | _internal_                  | Inherits the parent block type's `defaultConfig` and merges block-instance copies. Used as the schema default for `BuildingBlock.config`. User-supplied `config` is wrapped automatically (the wrap merges block-type + block-instance translations into `copies`); you do not need to call this macro from `app.ts`.                                                                |
-| `blockDynamicDataCode(BlockTypeTable.id)` | `BuildingBlock.dynamicData` | Inherits the parent block type's `defaultDynamicData`. Used in the schema definition and in per-instance `dynamicData` overrides to extend parent data.                                                                              |
-| `blockNameCode(BlockTypeTable.id)`        | `BuildingBlock.name`        | Derives the block instance name from its block type. Used in the schema definition.                                                                                                                                                  |
-| `pageLocalizedConfigCode()`               | `Page.localizedConfig`      | Computes localized page metadata (canonical path, notFound). Used in the schema definition.                                                                                                                                          |
+| `blockConfigCode(BlockTypeTable.id)`      | _internal_                  | Inherits the parent block type's `defaultConfig` and merges block-instance copies. Used as the schema default for `BuildingBlock.config`. User-supplied `config` is wrapped automatically (the wrap merges block-type + block-instance translations into `copies`); you do not need to call this macro from `app.ts`.                                                                     |
+| `blockDynamicDataCode(BlockTypeTable.id)` | `BuildingBlock.dynamicData` | Inherits the parent block type's `defaultDynamicData`. Used in the schema definition and in per-instance `dynamicData` overrides to extend parent data.                                                                                                                                                                                                                                   |
+| `blockNameCode(BlockTypeTable.id)`        | `BuildingBlock.name`        | Derives the block instance name from its block type. Used in the schema definition.                                                                                                                                                                                                                                                                                                       |
+| `pageLocalizedConfigCode()`               | `Page.localizedConfig`      | Computes localized page metadata (canonical path, notFound). Used in the schema definition.                                                                                                                                                                                                                                                                                               |
 
 ---
 
@@ -491,7 +496,7 @@ Creating an app from scratch and modifying an existing one are the **same
 workflow** with two switches: `Turbofy_app_init` vs `Turbofy_app_pull` at the
 front, and a full build vs a delta in the middle. Once the schema and a per-block
 contract are fixed, blocks are largely independent of each other, so the block
-work **parallelizes** — but the pieces *within* one block (dynamic field →
+work **parallelizes** — but the pieces _within_ one block (dynamic field →
 `record.ts` → `index.tsx`) are a dependency chain that must stay together in one
 worker.
 
@@ -504,11 +509,11 @@ wall-clock at the cost of N× context.
 Parallel workers must write **disjoint** files. The shared files have exactly one
 owner: the **orchestrator** (the main agent driving this skill).
 
-| Owner | Writes | Never writes |
-| ----- | ------ | ------------ |
-| Orchestrator (main agent) | `app.ts`, `schema.ts`, the `block-types/index.ts` barrel; runs init/pull and the single push | individual `block-types/<Name>/` internals |
-| `turbofy-block-builder` (one per block) | only its own `block-types/<Name>/` (`record.ts`, `index.tsx`) | `app.ts`, the barrel, `schema.ts`, other blocks; never pushes |
-| `turbofy-schema-builder` (optional) | `schema.ts` | `app.ts`, `block-types/` |
+| Owner                                   | Writes                                                                                       | Never writes                                                  |
+| --------------------------------------- | -------------------------------------------------------------------------------------------- | ------------------------------------------------------------- |
+| Orchestrator (main agent)               | `app.ts`, `schema.ts`, the `block-types/index.ts` barrel; runs init/pull and the single push | individual `block-types/<Name>/` internals                    |
+| `turbofy-block-builder` (one per block) | only its own `block-types/<Name>/` (`record.ts`, `index.tsx`)                                | `app.ts`, the barrel, `schema.ts`, other blocks; never pushes |
+| `turbofy-schema-builder` (optional)     | `schema.ts`                                                                                  | `app.ts`, `block-types/`                                      |
 
 > The fan-out happens **at the orchestrator (main-agent) level** — a subagent
 > can't spawn further subagents. If custom plugin agents aren't available in your
