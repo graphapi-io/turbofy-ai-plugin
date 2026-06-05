@@ -1,6 +1,6 @@
 ---
 name: turbofy-block-builder
-description: Builds or modifies EXACTLY ONE Turbofy block type end-to-end (server-side dynamic-field code → record.ts DSL → index.tsx React component) inside an already-pulled app. Delegate one instance per block when building or modifying a multi-block app in parallel. Operates only within its own block-types/<Name>/ subtree; never edits app.ts, the block-types barrel, schema.ts, or other blocks, and never pushes. Returns the data needed to wire the block into the app.
+description: Delegate to build or modify exactly ONE UI section end-to-end (server data + manifest + React component) inside an already-pulled app. One instance per section when parallelizing a multi-section build. Never edits page layout, other sections, or schema. Returns the data needed to wire the section into the app.
 skills: [turbofy-platform, turbofy-apps, turbofy-blocks, turbofy-dynamic-fields]
 ---
 

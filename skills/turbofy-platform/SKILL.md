@@ -1,11 +1,23 @@
 ---
 name: turbofy-platform
-description: Use as the entry point for any work involving the Turbofy platform — answering "what is Turbofy" questions, orienting in a fresh session, deciding which deep skill to load next (turbofy-apps for Apps CMS work, turbofy-blocks for React block components, turbofy-dynamic-fields for server-side JS), working with the Turbofy MCP at the workspace level (Turbofy_list_organizations, Turbofy_list_workspaces, Turbofy_workspace_pull/push, Turbofy_table_list, generic Turbofy_data_* / Turbofy_file_upload), or editing the data schema (schema.ts via the data-builder DSL). Covers the mental model (organization → workspace → schema/data → apps → pages → blocks → dynamic fields), environments (alpha vs prod), the ~/.turbofy/workspaces/<env>/<wsId>/ root layout, core MCP rules (pass workspaceId explicitly, read-before-write, system CMS vs workspace IDs), and the workspace-only pull → edit → push schema workflow.
+description: "Use as the first skill for any Turbofy work — especially when the user asks 'what is Turbofy', 'list my workspaces', 'set up my database', 'add a table or field', 'change my data model', 'add/edit/delete records', 'upload a file', or 'connect to Turbofy'. Also load at the start of a fresh session before calling any Turbofy MCP tool, to pick the right follow-on skill. Covers org/workspace discovery, environments, schema editing, record CRUD, file upload, and core MCP rules. Do NOT use for page layout, placing sections on pages, or building UI components — load turbofy-apps, turbofy-blocks, or turbofy-dynamic-fields instead."
+disable-model-invocation: false
 ---
 
 # Turbofy Platform
 
 This is the orientation skill for the Turbofy platform. Load it first when you walk into a fresh session, when you're working at the workspace/schema level (not inside a specific app), or when you need to decide which deeper skill to pull in. The three companion skills — `turbofy-apps`, `turbofy-blocks`, `turbofy-dynamic-fields` — each own a deeper slice of the platform.
+
+## When to load this skill
+
+Load when the user asks about **workspaces, databases, tables, records, or getting started with Turbofy** — e.g. "list my workspaces", "add a Products table", "upload a file". Do not wait for them to mention `schema.ts`, MCP tools, or Turbofy internals.
+
+| User wants… | Load instead |
+|---|---|
+| Pages, layout, homepage, translate the site | `turbofy-apps` |
+| Build/style a section (navbar, hero, grid) | `turbofy-blocks` |
+| Server data blank, fetch records, URL-based titles | `turbofy-dynamic-fields` |
+| Tables, schema, records, workspaces | stay here |
 
 ---
 

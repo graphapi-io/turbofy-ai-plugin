@@ -28,8 +28,8 @@
     ],
     "defaultPrompt": [
       "Help me build a Turbofy app.",
-      "Create a Turbofy block type.",
-      "Write a Turbofy dynamic field."
+      "Add a new page to my Turbofy app.",
+      "Build a product listing section for my Turbofy app."
     ],
     "brandColor": "#14B8A6",
     "composerIcon": "./assets/turbofy-ai-logo.svg",

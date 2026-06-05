@@ -1,6 +1,7 @@
 ---
 name: turbofy-setup
-description: One-time setup for Claude Code so the assistant can work in the ~/.turbofy directory without asking for permission every time. Use when the user wants to stop repeated permission prompts for their Turbofy files, or asks to set up / configure Turbofy permissions. Edits ~/.claude/settings.json. Claude Code only.
+description: "Use when Claude Code keeps asking permission to read or edit Turbofy files. One-time setup: adds ~/.turbofy to allowed paths in ~/.claude/settings.json. Triggers: '/turbofy-setup', 'stop permission prompts', 'configure Turbofy permissions'. Claude Code only."
+disable-model-invocation: false
 ---
 
 # Turbofy permission setup
