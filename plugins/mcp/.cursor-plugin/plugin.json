@@ -19,7 +19,7 @@
     "blocks"
   ],
   "category": "developer-tools",
-  "logo": "./assets/turbofy-ai-logo.svg",
+  "logo": "assets/turbofy-ai-logo.svg",
   "tags": [
     "mcp",
     "apps",
