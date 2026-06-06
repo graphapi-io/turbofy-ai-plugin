@@ -141,6 +141,7 @@ need to do that each session, whereas `/turbofy-setup` is permanent.
 
 ## Troubleshooting
 
+- **No custom icon in Claude Code.** Claude's plugin marketplace does not yet render custom plugin icons — all plugins show the same default placeholder ([anthropics/claude-code#28187](https://github.com/anthropics/claude-code/issues/28187)). The `icon` field is set in `.claude-plugin/` for when support lands.
 - **Tool names look like `plugin_turbofy_mcp`.** Claude Code labels plugin MCP tools as `plugin_{marketplace}_{plugin}`. The marketplace is `turbofy`; the plugin package id is `mcp` (under `plugins/mcp/`). The UI still shows "Turbofy" via `displayName`.
 - **Nothing happened after install.** Restart the app or reload plugins. In Claude Code you can also run `/reload-plugins`.
 - **The assistant doesn't seem to see Turbofy.** Make sure you're signed in to Turbofy in your assistant, and that the `turbofy` MCP appears as connected (in Claude Code, run `/mcp`).
