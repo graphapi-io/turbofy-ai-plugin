@@ -26,9 +26,10 @@ Pick your app below for the exact clicks.
 3. Click **Customize**.
 4. Click the **+** icon next to **Personal Plugins**.
 5. Choose **Create Plugin** → **Add marketplace**.
-6. Paste `https://github.com/graphapi-io/turbofy-ai-plugin` and confirm.
-7. Select the **Turbofy** plugin and click **Install**.
-8. In a chat, run **`/turbofy-setup`** once (see [Fewer permission prompts](#fewer-permission-prompts-claude) below). This stops Claude from asking for permission every time it works on your Turbofy files.
+6. Choose **Add from a repository**.
+7. Click on **Select repository** and paste `https://github.com/graphapi-io/turbofy-ai-plugin` and click **Sync**.
+8. Select the **Turbofy** plugin and click **Install** (`+` button).
+9. In a chat, run **`/turbofy-setup`** once (see [Fewer permission prompts](#fewer-permission-prompts-claude) below). This stops Claude from asking for permission every time it works on your Turbofy files.
 
 That's it — from now on you can just use it.
 
