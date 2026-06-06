@@ -140,7 +140,7 @@ need to do that each session, whereas `/turbofy-setup` is permanent.
 
 ## Troubleshooting
 
-- **Tool names look like `plugin_turbofy_mcp`.** Claude Code labels plugin MCP tools as `plugin_{marketplace}_{plugin}`. The marketplace is `turbofy`; the plugin entry is `mcp` (the MCP server bundle). Older installs may still show `plugin_turbofy_turbofy` if both names were `turbofy` — reinstall or `/reload-plugins` after updating.
+- **Tool names look like `plugin_turbofy_mcp`.** Claude Code labels plugin MCP tools as `plugin_{marketplace}_{plugin}`. The marketplace is `turbofy`; the plugin package id is `mcp` (under `plugins/mcp/`). The UI still shows "Turbofy" via `displayName`.
 - **Nothing happened after install.** Restart the app or reload plugins. In Claude Code you can also run `/reload-plugins`.
 - **The assistant doesn't seem to see Turbofy.** Make sure you're signed in to Turbofy in your assistant, and that the `turbofy` MCP appears as connected (in Claude Code, run `/mcp`).
 - **Claude keeps asking permission to touch `~/.turbofy`.** Run `/turbofy-setup` once (see [Fewer permission prompts](#fewer-permission-prompts-claude)).
