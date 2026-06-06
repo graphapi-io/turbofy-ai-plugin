@@ -10,6 +10,7 @@
   "plugins": [
     {
       "name": "turbofy-plugin",
+      "displayName": "Turbofy",
       "source": "./",
       "description": "Turbofy MCP integration plus guidance skills for building apps, block types, and dynamic fields on the Turbofy platform.",
       "version": "0.0.3",
