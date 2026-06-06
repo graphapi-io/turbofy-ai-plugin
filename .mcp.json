@@ -1,8 +1,10 @@
 {
+  "$schema": "https://cursor.com/schemas/mcp.json",
   "mcpServers": {
     "turbofy": {
       "command": "npx",
-      "args": ["-y", "@turbofy-ai/mcp@latest"]
+      "args": ["-y", "@turbofy-ai/mcp@latest"],
+      "description": "Turbofy MCP server — build apps, edit pages and blocks, manage workspace data, and push changes to the Turbofy platform"
     }
   }
 }
