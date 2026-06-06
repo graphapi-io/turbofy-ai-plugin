@@ -1,31 +1,14 @@
 {
-  "name": "mcp",
-  "displayName": "Turbofy",
-  "version": "0.0.3",
+  "name": "turbofy-plugin",
   "description": "Turbofy MCP integration plus guidance skills for building apps, block types, and dynamic fields on the Turbofy platform.",
+  "version": "0.0.3",
   "author": {
     "name": "Turbofy",
     "email": "hello@turbofy.com"
   },
-  "publisher": "Turbofy",
+  "logo": "../assets/turbofy-ai-logo.svg",
   "homepage": "https://github.com/graphapi-io/turbofy-ai-plugin",
   "repository": "https://github.com/graphapi-io/turbofy-ai-plugin",
   "license": "MIT",
-  "keywords": [
-    "turbofy",
-    "mcp",
-    "apps",
-    "cms",
-    "blocks"
-  ],
-  "category": "developer-tools",
-  "logo": "assets/turbofy-ai-logo.svg",
-  "tags": [
-    "mcp",
-    "apps",
-    "blocks",
-    "skills"
-  ],
-  "skills": "./skills/",
-  "mcpServers": "./mcp.json"
+  "keywords": ["turbofy", "mcp", "apps", "cms", "blocks"]
 }
