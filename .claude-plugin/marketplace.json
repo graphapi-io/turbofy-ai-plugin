@@ -8,6 +8,7 @@
   "plugins": [
     {
       "name": "mcp",
+      "displayName": "Turbofy MCP",
       "source": "./",
       "description": "Turbofy MCP integration plus three guidance skills for building apps, block types, and dynamic fields on the Turbofy platform."
     }
