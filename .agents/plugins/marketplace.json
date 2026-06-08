@@ -5,10 +5,10 @@
   },
   "plugins": [
     {
-      "name": "mcp",
+      "name": "turbofy",
       "source": {
         "source": "local",
-        "path": "./plugins/mcp"
+        "path": "./plugins/turbofy"
       },
       "policy": {
         "installation": "AVAILABLE",
