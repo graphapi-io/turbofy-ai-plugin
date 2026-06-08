@@ -1,7 +1,7 @@
 {
-  "name": "mcp",
+  "name": "turbofy",
   "displayName": "Turbofy MCP",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "Turbofy MCP integration plus guidance skills for building apps, block types, and dynamic fields on the Turbofy platform.",
   "author": {
     "name": "Turbofy",
