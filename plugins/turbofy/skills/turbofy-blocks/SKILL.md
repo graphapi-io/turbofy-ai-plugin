@@ -991,7 +991,68 @@ export const BuildingBlock = ({
 
 ---
 
-## 4) Common gotchas
+## 4) System blocks (Login & Signup)
+
+These are built-in blocks provided by the platform for end-user authentication. They are already in the block registry and do not need a `record.ts` or custom source — use them by referencing their block type when placing blocks on a page.
+
+### Login block (`Login`)
+
+**Purpose:** email + password sign-in form for end users.
+
+Behavior:
+
+- Uses the `login()` helper from `@/lib/auth` which POSTs to `/api/auth/login`.
+- After successful login, redirects to `safeNextPath()` (honors the `?next=` query param for deep linking).
+- The page containing the Login block should use `searchParams: dynamic` (it reads `?next=` from the URL). This is handled automatically by the page generator.
+- **Must be placed on a public page** (since users need to reach it without auth). Set the page as `loginPageId` in the app's `auth` settings.
+
+Localizable copies (via `config.copies`):
+
+`title`, `description`, `imageUrl`, `emailLabel`, `emailPlaceholder`, `passwordLabel`, `passwordPlaceholder`, `forgotPassword` (link), `signIn` (button), `signupPrompt`, `signup` (link), `quote`, `quoteAuthor`, `imageAlt`
+
+### Signup block (`Signup`)
+
+**Purpose:** registration form (name, email, password) with an email confirmation code step.
+
+Behavior:
+
+- Uses `signup()` and `confirmSignup()` from `@/lib/auth`, then auto-logs in via `login()`.
+- Two-step flow: registration → email confirmation code → auto sign-in.
+- **Must be placed on a public page** (registration must be accessible without auth).
+- Only shown/useful when `auth.allowSignup` is `true` in the app's auth settings.
+
+Localizable copies (via `config.copies`):
+
+`title`, `description`, `imageSrc`, `nameLabel`, `namePlaceholder`, `emailLabel`, `emailPlaceholder`, `passwordLabel`, `passwordPlaceholder`, `submitButton`, `confirmTitle`, `confirmDescription`, `confirmCodeLabel`, `confirmCodePlaceholder`, `confirmButton`, `loginPrompt`, `loginLink`, `quote`, `quoteAuthor`, `imageAlt`
+
+### Placing auth blocks in `app.ts`
+
+```ts
+import { loginBlock, signupBlock } from "./block-types/index.js";
+
+const loginPage = appBuilder.page({
+  name: "Login",
+  slug: "login",
+  // public (default) — login page must be reachable without auth
+  blocks: [
+    appBuilder.block({ type: loginBlock }),
+  ],
+});
+
+const signupPage = appBuilder.page({
+  name: "Signup",
+  slug: "signup",
+  blocks: [
+    appBuilder.block({ type: signupBlock }),
+  ],
+});
+```
+
+See `turbofy-apps` § "Authentication settings" for full `auth` configuration and page `visibility`.
+
+---
+
+## 5) Common gotchas
 
 - **Blocks are self-contained**: A block is either a single `.tsx` file or a directory with an `index.tsx` entry point. Files within a multi-file block directory can import each other, but blocks cannot import files outside their own block boundary or from other blocks.
 - **Always read locale from `props.locale`** — never hardcode it, derive it from the URL, or use `window.navigator.language`. **Never** create `getCurrentLocale()`, `getLocale()`, or similar helper functions.
