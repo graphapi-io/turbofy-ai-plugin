@@ -1,6 +1,6 @@
 ---
 name: turbofy-apps
-description: "Use when building or editing a Turbofy website/app — creating an app, syncing it locally, adding/removing/reordering pages, placing or rearranging sections on a page, changing site settings, translating content, fixing URLs/slugs, or pushing changes live. Triggers: 'build my app', 'add a page', 'update the homepage', 'change the layout', 'add a header to every page', 'translate to German', 'fix this URL', 'reorder sections', 'edit my Turbofy app' — even when the user doesn't mention files or tools. Load BEFORE calling any Turbofy_app_* MCP tool. Covers app.ts, pages, section placement, localization, and pull → edit → push. Do NOT use for database schema changes or writing React UI code — load turbofy-platform or turbofy-blocks instead."
+description: "Use when building or editing a Turbofy website/app — creating an app, syncing it locally, adding/removing/reordering pages, placing or rearranging sections on a page, changing site settings, adding private pages or authentication, translating content, fixing URLs/slugs, or pushing changes live. Triggers: 'build my app', 'add a page', 'update the homepage', 'change the layout', 'add a header to every page', 'translate to German', 'fix this URL', 'reorder sections', 'make this page private', 'add login', 'require authentication', 'edit my Turbofy app' — even when the user doesn't mention files or tools. Load BEFORE calling any Turbofy_app_* MCP tool. Covers app.ts, pages, page visibility, auth settings, section placement, localization, and pull → edit → push. Do NOT use for database schema changes or writing React UI code — load turbofy-platform or turbofy-blocks instead."
 disable-model-invocation: false
 ---
 
@@ -21,7 +21,7 @@ Load when the user wants to **change their site structure or content placement**
 Apps are how Turbofy lets users assemble web applications from a data schema and a set of building blocks. They can run in two modes:
 
 - **In-dashboard** — the default. Apps execute inside the Turbofy dashboard with direct access to the workspace's data (including non-public tables, gated by the dashboard's auth). No publishing or deployment step.
-- **Published / standalone** — the same app served as a production-ready public site. **Currently limited to public apps**: a published app can only read from and write to **public tables**. If the app touches any non-public table, publishing is not an option until that data is moved to a public table (or the app is restructured). Keep this constraint in mind when designing the schema for an app that's intended to be published.
+- **Published / standalone** — the same app served as a production-ready public site. Published apps support **private (auth-gated) pages** via end-user authentication (see § "Page visibility" and § "Authentication settings" below). Public tables are still required for data access, but individual pages can be restricted to authenticated users.
 
 The runtime, file layout, and `Turbofy_app_*` workflow are identical for both modes — the difference is the table-visibility constraint that publishing imposes.
 
@@ -113,11 +113,11 @@ Key fields:
 
 **Naming patterns** (canonical):
 
-| Pattern                          | Example IDs             | Purpose                                                                      |
-| -------------------------------- | ----------------------- | ---------------------------------------------------------------------------- |
+| Pattern                          | Example IDs             | Purpose                                                                             |
+| -------------------------------- | ----------------------- | ----------------------------------------------------------------------------------- |
 | `{lang}_blocktype_{blockTypeId}` | `en_blocktype_2vaEf74y` | Block type copies — written by `Turbofy_app_push` from `record.ts` `localizations`. |
-| `{lang}_block_{blockId}`         | `en_block_ghi789`       | Per-instance block overrides.                                                |
-| `{lang}_page_{pageId}`           | `en_page_def456`        | Page-level localized content.                                                |
+| `{lang}_block_{blockId}`         | `en_block_ghi789`       | Per-instance block overrides.                                                       |
+| `{lang}_page_{pageId}`           | `en_page_def456`        | Page-level localized content.                                                       |
 
 Note: `appId` is not included in the pattern since localizations already belong to an app via the `appId` field.
 
@@ -171,15 +171,15 @@ Always call `Turbofy_app_push` with `dryRun: true` first to preview the diff.
 
 When you need pages/block types/building blocks/localizations/images, use the generic data tools (`Turbofy_data_list`, `Turbofy_data_get`, etc. — see `turbofy-platform`). For the `ofType` argument, pass the **literal string value** below — `CmsOfTypeEnum.X` only works inside the DSL (TypeScript), not in MCP tool calls.
 
-| Entity              | `ofType` (MCP)             |
-| ------------------- | -------------------------- |
-| App                 | `"cmsapp"`                 |
-| Page                | `"cmspage"`                |
-| BuildingBlockType   | `"cmsbuildingblocktype"`   |
-| BuildingBlock       | `"cmsbuildingblock"`       |
-| Localization        | `"cmslocalization"`        |
-| Image (FileDocument)| `"filedocument"`           |
-| SlugMapping         | `"slugmapping"`            |
+| Entity               | `ofType` (MCP)           |
+| -------------------- | ------------------------ |
+| App                  | `"cmsapp"`               |
+| Page                 | `"cmspage"`              |
+| BuildingBlockType    | `"cmsbuildingblocktype"` |
+| BuildingBlock        | `"cmsbuildingblock"`     |
+| Localization         | `"cmslocalization"`      |
+| Image (FileDocument) | `"filedocument"`         |
+| SlugMapping          | `"slugmapping"`          |
 
 See `turbofy-platform` § 4 for the full mapping table (including the DSL enum equivalents and the less common entries `EntityLocalization`, `Api`, `Code`).
 
@@ -288,6 +288,117 @@ export const app = appBuilder.buildApp({
 });
 ```
 
+### Page visibility
+
+Each page can restrict access via the `visibility` option on `appBuilder.page()`:
+
+```ts
+const dashboard = appBuilder.page({
+  name: "Dashboard",
+  slug: "dashboard",
+  visibility: "user",  // requires authentication
+  blocks: [...],
+});
+```
+
+Valid values (`PageVisibility` type):
+
+| Value             | Meaning                                                                 |
+| ----------------- | ----------------------------------------------------------------------- |
+| `"public"`        | Default (can be omitted). Accessible to anyone.                         |
+| `"authenticated"` | Requires a valid session (any logged-in user).                          |
+| `"group"`         | Requires group membership (enforced at data layer via PBAC).            |
+| `"user"`          | Requires the specific user match (enforced at data layer).              |
+
+In practice, `"user"` is the most common value for "private page that requires login." When `visibility` is omitted the page is public.
+
+The decompiler (`Turbofy_app_pull`) emits `visibility` on pages that aren't public, so round-tripping works correctly.
+
+### Authentication settings
+
+Enable end-user authentication on a published app via the `auth` option on `buildApp()`:
+
+```ts
+export const app = appBuilder.buildApp({
+  name: "My App",
+  i18n: { locales: ["en"], default: "en" },
+  auth: {
+    enabled: true,
+    allowSignup: true,
+    signupFields: [
+      { name: "full_name", label: "Full Name" },
+    ],
+    redirectPageId: "<page-id>",  // where to land after login
+    loginPageId: "<page-id>",     // custom login page (must contain Login block)
+  },
+  pages: [...],
+});
+```
+
+`IAppAuthSettings` fields:
+
+| Field             | Type                                                                                             | Description                                                                      |
+| ----------------- | ------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------- |
+| `enabled`         | `boolean?`                                                                                       | Whether end-user authentication is enabled.                                      |
+| `allowSignup`     | `boolean?`                                                                                       | Whether visitors can self-register.                                              |
+| `signupFields`    | `{ name: string; label?: string; type?: "text" \| "number" \| "email"; required?: boolean }[]?`  | Extra profile fields beyond email + password.                                    |
+| `redirectPageId`  | `string?`                                                                                        | Page to redirect to after login (absent = locale home page).                     |
+| `loginPageId`     | `string?`                                                                                        | Page serving as login screen (absent = built-in `/login` page).                  |
+
+### How private pages work at runtime
+
+When `auth.enabled` is `true`:
+
+1. Pages with `visibility` other than `"public"` are protected by a proxy that checks for a valid JWT session cookie.
+2. Unauthenticated users hitting a private page are redirected to the login page (either the built-in one or the custom `loginPageId`).
+3. After login, users are redirected back to the page they tried to access (deep-linking), or to `redirectPageId` if they navigated to login directly.
+4. The **Login** and **Signup** system blocks handle the auth forms — they call `/api/auth/login` and `/api/auth/signup` endpoints backed by Cognito. See `turbofy-blocks` for details on these system blocks.
+
+#### Usage pattern for a typical app with auth
+
+```ts
+import { appBuilder } from "@graphapi-io/dsl-builders";
+import { loginBlock, signupBlock, dashboardBlock } from "./block-types/index.js";
+
+const loginPage = appBuilder.page({
+  name: "Login",
+  slug: "login",
+  // visibility is public (default) — login page must be reachable
+  blocks: [
+    appBuilder.block({ type: loginBlock }),
+  ],
+});
+
+const signupPage = appBuilder.page({
+  name: "Signup",
+  slug: "signup",
+  blocks: [
+    appBuilder.block({ type: signupBlock }),
+  ],
+});
+
+const dashboard = appBuilder.page({
+  name: "Dashboard",
+  slug: "dashboard",
+  visibility: "user",  // private — requires authentication
+  blocks: [
+    appBuilder.block({ type: dashboardBlock }),
+  ],
+});
+
+export const app = appBuilder.buildApp({
+  name: "My App",
+  i18n: { locales: ["en"], default: "en" },
+  auth: {
+    enabled: true,
+    allowSignup: true,
+    loginPageId: loginPage.id,       // use our custom login page
+    redirectPageId: dashboard.id,    // after login, go to dashboard
+  },
+  pages: [loginPage, signupPage, dashboard],
+});
+```
+
 ### Localization workflow
 
 Localized copies for block types live **inside the workspace**, alongside the block type definition. The agent edits them directly in `record.ts`; `Turbofy_app_push` materializes them into Localization rows in the CMS, and `Turbofy_app_pull` reverses the round trip.
@@ -301,7 +412,7 @@ export const app = appBuilder.buildApp({
   name: "My App",
   i18n: {
     locales: ["en", "de"], // every locale the app supports
-    default: "en",         // root-locale redirect target AND copies-fallback locale
+    default: "en", // root-locale redirect target AND copies-fallback locale
   },
   pages: [home, productDetail],
   blockTypes: [navigationBlock, dashboardBlock, footerBlock],
@@ -426,13 +537,13 @@ const {
 } = macros;
 ```
 
-| Macro                                     | Used in                     | Description                                                                                                                                                                                                                          |
-| ----------------------------------------- | --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Macro                                     | Used in                     | Description                                                                                                                                                                                                                                                                                                                                                                               |
+| ----------------------------------------- | --------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `blockTypeCopiesCode()`                   | _internal_                  | Resolves localized copies for the block type from `${lang}_blocktype_${$$self.id}` Localization records. Used as the schema default for `BuildingBlockType.defaultConfig` (when no user code is provided). **Do not spread it into `defaultConfig` yourself** — the dsl-builders auto-inject `copies` into every user-supplied `defaultConfig` (hard lock; see "Auto-injected `copies`"). |
-| `blockConfigCode(BlockTypeTable.id)`      | _internal_                  | Inherits the parent block type's `defaultConfig` and merges block-instance copies. Used as the schema default for `BuildingBlock.config`. User-supplied `config` is wrapped automatically (the wrap merges block-type + block-instance translations into `copies`); you do not need to call this macro from `app.ts`.                                                                |
-| `blockDynamicDataCode(BlockTypeTable.id)` | `BuildingBlock.dynamicData` | Inherits the parent block type's `defaultDynamicData`. Used in the schema definition and in per-instance `dynamicData` overrides to extend parent data.                                                                              |
-| `blockNameCode(BlockTypeTable.id)`        | `BuildingBlock.name`        | Derives the block instance name from its block type. Used in the schema definition.                                                                                                                                                  |
-| `pageLocalizedConfigCode()`               | `Page.localizedConfig`      | Computes localized page metadata (canonical path, notFound). Used in the schema definition.                                                                                                                                          |
+| `blockConfigCode(BlockTypeTable.id)`      | _internal_                  | Inherits the parent block type's `defaultConfig` and merges block-instance copies. Used as the schema default for `BuildingBlock.config`. User-supplied `config` is wrapped automatically (the wrap merges block-type + block-instance translations into `copies`); you do not need to call this macro from `app.ts`.                                                                     |
+| `blockDynamicDataCode(BlockTypeTable.id)` | `BuildingBlock.dynamicData` | Inherits the parent block type's `defaultDynamicData`. Used in the schema definition and in per-instance `dynamicData` overrides to extend parent data.                                                                                                                                                                                                                                   |
+| `blockNameCode(BlockTypeTable.id)`        | `BuildingBlock.name`        | Derives the block instance name from its block type. Used in the schema definition.                                                                                                                                                                                                                                                                                                       |
+| `pageLocalizedConfigCode()`               | `Page.localizedConfig`      | Computes localized page metadata (canonical path, notFound). Used in the schema definition.                                                                                                                                                                                                                                                                                               |
 
 ---
 
@@ -496,7 +607,7 @@ Creating an app from scratch and modifying an existing one are the **same
 workflow** with two switches: `Turbofy_app_init` vs `Turbofy_app_pull` at the
 front, and a full build vs a delta in the middle. Once the schema and a per-block
 contract are fixed, blocks are largely independent of each other, so the block
-work **parallelizes** — but the pieces *within* one block (dynamic field →
+work **parallelizes** — but the pieces _within_ one block (dynamic field →
 `record.ts` → `index.tsx`) are a dependency chain that must stay together in one
 worker.
 
@@ -509,11 +620,11 @@ wall-clock at the cost of N× context.
 Parallel workers must write **disjoint** files. The shared files have exactly one
 owner: the **orchestrator** (the main agent driving this skill).
 
-| Owner | Writes | Never writes |
-| ----- | ------ | ------------ |
-| Orchestrator (main agent) | `app.ts`, `schema.ts`, the `block-types/index.ts` barrel; runs init/pull and the single push | individual `block-types/<Name>/` internals |
-| `turbofy-block-builder` (one per block) | only its own `block-types/<Name>/` (`record.ts`, `index.tsx`) | `app.ts`, the barrel, `schema.ts`, other blocks; never pushes |
-| `turbofy-schema-builder` (optional) | `schema.ts` | `app.ts`, `block-types/` |
+| Owner                                   | Writes                                                                                       | Never writes                                                  |
+| --------------------------------------- | -------------------------------------------------------------------------------------------- | ------------------------------------------------------------- |
+| Orchestrator (main agent)               | `app.ts`, `schema.ts`, the `block-types/index.ts` barrel; runs init/pull and the single push | individual `block-types/<Name>/` internals                    |
+| `turbofy-block-builder` (one per block) | only its own `block-types/<Name>/` (`record.ts`, `index.tsx`)                                | `app.ts`, the barrel, `schema.ts`, other blocks; never pushes |
+| `turbofy-schema-builder` (optional)     | `schema.ts`                                                                                  | `app.ts`, `block-types/`                                      |
 
 > The fan-out happens **at the orchestrator (main-agent) level** — a subagent
 > can't spawn further subagents. If custom plugin agents aren't available in your
